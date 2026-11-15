@@ -118,6 +118,7 @@ function openTitle() {
   setMenu('title', { y: null, items: [
     { label: save.unlocked > 1 || save.stickers > 0 ? 'DEVAM ET' : 'OYNA', fn: openChapters },
     { label: 'HİKÂYE', fn: openStory },
+    { label: 'KALE KAPMACA (ONLINE)', fn: () => { location.href = 'kale/index.html'; } },
     { label: 'DÜKKÂN', fn: () => openShop(openTitle) },
     { label: 'KONTROLLER', fn: () => openHelp(openTitle) },
     { label: 'AYARLAR', fn: () => openSettings(openTitle) },
