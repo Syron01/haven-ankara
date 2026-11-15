@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0916" />
+<title>Haven Ankara: Çay, Döner ve Code Jam</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0916; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #game { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  #pad, #pauseBtn { display: none; }
+  body.touch[data-state="play"] #pad, body.touch[data-state="dialog"] #pad { display: block; }
+  body.touch[data-state="play"] #pauseBtn, body.touch[data-state="pause"] #pauseBtn { display: flex; }
+  .tb { position: fixed; width: 15vmin; height: 15vmin; min-width: 46px; min-height: 46px; max-width: 84px; max-height: 84px; border-radius: 50%; box-sizing: border-box;
+    background: rgba(255, 247, 237, 0.16); border: 3px solid rgba(255, 247, 237, 0.5); color: #fff7ed; font: 700 5vmin/1 ui-monospace, Menlo, Consolas, monospace;
+    display: flex; align-items: center; justify-content: center; touch-action: none; }
+  .tb.on { background: rgba(236, 55, 80, 0.55); border-color: #fff7ed; }
+  .tb.sm { width: 11.5vmin; height: 11.5vmin; min-width: 38px; min-height: 38px; font-size: 4vmin; }
+  #pauseBtn { top: max(6px, env(safe-area-inset-top)); left: 50%; margin-left: -18px; width: 36px; height: 36px; min-width: 0; min-height: 0; font-size: 14px; letter-spacing: 2px; }
+</style>
+</head>
+<body data-state="title">
+<canvas id="game" width="480" height="270" aria-label="Haven Ankara oyunu"></canvas>
+<div id="pad">
+  <div class="tb" data-h="l" style="left: 4vmin; bottom: 7vmin;">&#9664;</div>
+  <div class="tb" data-h="r" style="left: 23vmin; bottom: 7vmin;">&#9654;</div>
+  <div class="tb sm" data-h="d" style="left: 15vmin; bottom: 24vmin;">&#9660;</div>
+  <div class="tb" data-h="jump" style="right: 4vmin; bottom: 7vmin;">&#9650;</div>
+  <div class="tb" data-p="atk" style="right: 22vmin; bottom: 7vmin;">&#9679;</div>
+  <div class="tb" data-p="kick" style="right: 13vmin; bottom: 24vmin;">&#9670;</div>
+  <div class="tb sm" data-p="dash" style="right: 31vmin; bottom: 25vmin;">&raquo;</div>
+  <div class="tb sm" data-p="use" style="right: 2vmin; bottom: 41vmin;">T</div>
+  <div class="tb sm" data-p="spec" style="right: 19vmin; bottom: 42vmin;">&#9733;</div>
+</div>
+<div class="tb" id="pauseBtn">II</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
