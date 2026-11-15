@@ -96,68 +96,411 @@ function lbox(g, x, y, w, h, fill, top, sel) {
   g.fillStyle = top; g.fillRect(x, yy, w, 2);
   return yy;
 }
-function drawGear(g, x, y, s, col) {
-  const u = Math.max(1, Math.floor(s / 12));
-  g.fillStyle = col;
-  const R = (a, b, w, h) => g.fillRect(x + a * u, y + b * u, w * u, h * u);
-  R(5, 0, 2, 12); R(0, 5, 12, 2); R(1, 1, 2, 2); R(9, 1, 2, 2); R(1, 9, 2, 2); R(9, 9, 2, 2); R(2, 2, 8, 8);
-  g.fillStyle = '#4a3a78'; R(4, 4, 4, 4); g.fillStyle = col; R(5, 5, 2, 2);
+// ---- Dan the Man style UI helpers
+function drawDanLogo(g, cx, cy, sc, t) {
+  // 3D Chunky HAVEN
+  const ly = cy;
+  // Black drop shadow
+  text(g, 'HAVEN', cx + 2, ly + 3, '#07060f', sc, 0.5);
+  // Red/terracotta 3D extrusion
+  text(g, 'HAVEN', cx + 1, ly + 2, '#851a08', sc, 0.5);
+  text(g, 'HAVEN', cx + 1, ly + 1, '#b91c1c', sc, 0.5);
+  // Warm orange base
+  text(g, 'HAVEN', cx, ly, '#ea580c', sc, 0.5);
+  // Bright golden top half
+  g.save();
+  g.beginPath();
+  g.rect(0, 0, 9999, ly + sc * 5);
+  g.clip();
+  text(g, 'HAVEN', cx, ly, '#fde047', sc, 0.5);
+  g.restore();
+
+  // Spinning ninja star / sticker on top-left of HAVEN
+  const starFr = Math.floor(t * 6) % 4;
+  const starX = cx - Math.round(textW('HAVEN', sc) * 0.5) - 14;
+  draw(g, SPR.sticker, starFr, starX, ly + 2, false);
+
+  // ANKARA pill banner below
+  const ay = ly + sc * 10 + 2;
+  const aw = textW('ANKARA', sc > 2 ? 2 : 1) + 20, ah = sc > 2 ? 14 : 11;
+  const ax = Math.round(cx - aw / 2);
+  // Banner border and shadow
+  g.fillStyle = '#07060f'; g.fillRect(ax - 2, ay - 1, aw + 4, ah + 3);
+  g.fillStyle = '#1e1b4b'; g.fillRect(ax, ay, aw, ah);
+  g.fillStyle = '#facc15'; g.fillRect(ax + 1, ay + 1, aw - 2, 1);
+  text(g, 'ANKARA', cx, ay + (sc > 2 ? 3 : 2), '#fff7ed', sc > 2 ? 2 : 1, 0.5, '#07060f');
+
+  // Small CLASSIC / CODE JAM badge
+  const cjw = textW('CODE JAM') + 8;
+  g.fillStyle = '#07060f'; g.fillRect(Math.round(cx - cjw / 2) - 1, ay + ah + 1, cjw + 2, 9);
+  g.fillStyle = '#15803d'; g.fillRect(Math.round(cx - cjw / 2), ay + ah + 2, cjw, 7);
+  text(g, 'CODE JAM', cx, ay + ah + 3, '#a7f3d0', 1, 0.5);
+
+  return ay + ah + 12;
 }
+
+function drawMiniArcade(g, x, y) {
+  // Mini retro arcade cabinet (14x20)
+  g.fillStyle = '#07060f'; g.fillRect(x - 1, y - 1, 16, 22);
+  g.fillStyle = '#4c1d95'; g.fillRect(x, y, 14, 20); // cabinet body
+  g.fillStyle = '#6d28d9'; g.fillRect(x + 1, y + 1, 12, 3); // marquee
+  g.fillStyle = '#fde047'; g.fillRect(x + 3, y + 2, 8, 1); // marquee text
+  g.fillStyle = '#0f172a'; g.fillRect(x + 1, y + 5, 12, 8); // screen bezel
+  g.fillStyle = '#22d3ee'; g.fillRect(x + 3, y + 6, 8, 6); // glowing cyan screen
+  g.fillStyle = '#ffffff'; g.fillRect(x + 5, y + 7, 3, 3); // screen character
+  g.fillStyle = '#1e1b4b'; g.fillRect(x + 1, y + 14, 12, 3); // control panel
+  g.fillStyle = '#ef4444'; g.fillRect(x + 3, y + 13, 2, 2); // joystick
+  g.fillStyle = '#facc15'; g.fillRect(x + 8, y + 15, 2, 1); // button 1
+  g.fillStyle = '#3b82f6'; g.fillRect(x + 11, y + 15, 2, 1); // button 2
+}
+
+function drawMiniIsland(g, x, y, w) {
+  // Lush green grass ledge (w x 12)
+  g.fillStyle = '#07060f'; g.fillRect(x - 2, y, w + 4, 10);
+  g.fillStyle = '#15803d'; g.fillRect(x, y + 1, w, 3); // grass top
+  g.fillStyle = '#22c55e'; g.fillRect(x, y + 1, w, 1); // grass highlight
+  g.fillStyle = '#78350f'; g.fillRect(x, y + 4, w, 5); // dirt base
+  g.fillStyle = '#92400e'; g.fillRect(x + 2, y + 5, w - 4, 2);
+}
+
 export function drawLobby(g, m, VW, VH, t) {
   const u = Math.min(VW, VH), rects = [], sel = m.sel;
-  g.fillStyle = '#2e4a6b'; g.fillRect(0, 0, VW, VH);
-  g.globalAlpha = 0.09;
-  const gl = ['</>', '{ }', '^.^'], cw = 40, ch = 22, ox = (t * 6) % cw, oy = (t * 3) % ch;
-  for (let r = -1; r * ch < VH + ch; r++) for (let c = -1; c * cw < VW + cw; c++) text(g, gl[(r * 3 + c + 99) % 3], c * cw + (r & 1) * 20 - ox, r * ch - oy, '#9fc0ea', 1, 0);
-  g.globalAlpha = 1;
-  // logo
-  const sc = VH < 250 ? 2 : 3, ly = VH < 250 ? 5 : Math.round(VH * 0.04);
-  text(g, 'HAVEN', VW / 2, ly + 2, INK, sc, 0.5); text(g, 'HAVEN', VW / 2 - 1, ly, RED, sc, 0.5); text(g, 'HAVEN', VW / 2 - 1, ly - 1, '#ff8c37', sc, 0.5);
-  g.save(); g.beginPath(); g.rect(0, ly + sc * 5, VW, 99); g.clip(); text(g, 'HAVEN', VW / 2 - 1, ly - 1, RED, sc, 0.5); g.restore();
-  text(g, 'ANKARA', VW / 2, ly + sc * 10 + 2, PAPER, sc, 0.5, INK);
-  const logoB = ly + sc * 17 + 2;
-  // tiles
-  const gap = Math.max(4, Math.round(u * 0.02)), ts = clamp(Math.round(u * 0.3), 46, 86), rowW = ts * 2 + gap, tx = Math.round((VW - rowW) / 2), ty = VH - 14 - ts;
-  const band = 11, spr = Math.floor((ts - band - 6) / 1);
-  const defs = [['MACERA', '#f59e0b', '#ffd27a', 'akin'], ['HİKÂYE', '#4ade80', '#bbf7d0', 'ozgur']];
-  defs.forEach(([lab, col, top, id], k) => {
-    const x = tx + k * (ts + gap), s = sel === k, y = lbox(g, x, ty, ts, ts, col, top, s);
-    g.fillStyle = 'rgba(20,16,33,.25)'; g.fillRect(x, y + ts - band - 6, ts, 6);
-    if (id) { const f = sprites(id, ['idle']).idle; draw64(g, f[Math.floor(t * 5) % f.length], x + (ts - spr) / 2, y + 4, spr); }
-    g.fillStyle = INK; g.fillRect(x, y + ts - band, ts, band);
-    text(g, lab, x + ts / 2, y + ts - band + 2, s ? GOLD : PAPER, 1, 0.5);
-    rects.push({ x: x - 2, y: ty - 3, w: ts + 4, h: ts + 6, i: k });
-  });
-  // wide purple button (ÇEVRİM İÇİ ARENA)
-  const bh = VH < 250 ? 14 : 18, wy = ty - bh - 8, ww = rowW;
-  {
-    const s = sel === 2, y = lbox(g, tx, wy, ww, bh, '#7c3aed', '#c4b5fd', s);
-    text(g, 'ÇEVRİM İÇİ ARENA', tx + ww / 2, y + Math.round((bh - 7) / 2) + 1, s ? GOLD : PAPER, 1, 0.5, INK);
-    // Küçük yeşil "CANLI" rozeti
-    const rw = textW('CANLI') + 6;
-    g.fillStyle = INK; g.fillRect(tx + ww - rw - 3, wy + 2, rw + 2, 11);
-    g.fillStyle = '#22c55e'; g.fillRect(tx + ww - rw - 2, wy + 3, rw, 9);
-    text(g, 'CANLI', tx + ww - rw / 2 - 2, wy + 4, PAPER, 1, 0.5);
-    rects.push({ x: tx - 2, y: wy - 3, w: ww + 4, h: bh + 6, i: 2 });
+
+  // 1. Rich Dan the Man Indigo/Purple Radial Gradient Background
+  const rad = g.createRadialGradient(VW / 2, VH * 0.42, 10, VW / 2, VH * 0.46, Math.max(VW, VH) * 0.85);
+  rad.addColorStop(0, '#2d226a');
+  rad.addColorStop(0.52, '#1e174b');
+  rad.addColorStop(1, '#0e0a2b');
+  g.fillStyle = rad;
+  g.fillRect(0, 0, VW, VH);
+
+  // Soft horizontal stage light stripe behind cards
+  const yStage = Math.round(VH * 0.5);
+  g.fillStyle = 'rgba(255, 255, 255, 0.05)';
+  g.fillRect(0, yStage - 2, VW, 4);
+  g.fillStyle = 'rgba(129, 140, 248, 0.07)';
+  g.fillRect(0, yStage, VW, VH - yStage);
+
+  // Animated subtle floating pattern (Devin heads, code brackets, pixel stars)
+  g.globalAlpha = 0.08;
+  const gl = ['</>', '{ }', '^.^', '*'];
+  const cw = 44, ch = 24, ox = (t * 5) % cw, oy = (t * 3) % ch;
+  for (let r = -1; r * ch < VH + ch; r++) {
+    for (let c = -1; c * cw < VW + cw; c++) {
+      text(g, gl[(r * 3 + c + 99) % gl.length], c * cw + (r & 1) * 22 - ox, r * ch - oy, '#c7d2fe', 1, 0);
+    }
   }
-  // left stack
-  const lw = VW < 300 ? 62 : 84, lbh = VH < 250 ? 13 : 17, lx = 6;
-  let ly2 = logoB + 4;
-  [[3, 'DÜKKÂN', '#0ea5e9', '#7dd3fc'], [4, 'KONTROLLER', '#475569', '#94a3b8']].forEach(([i, lab, c, tp]) => {
-    if (ly2 + lbh > wy - 2) return;
-    const s = sel === i, y = lbox(g, lx, ly2, lw, lbh, c, tp, s); text(g, lab, lx + lw / 2, y + Math.round((lbh - 7) / 2) + 1, s ? GOLD : PAPER, 1, 0.5, INK);
-    rects.push({ x: lx - 2, y: ly2 - 3, w: lw + 4, h: lbh + 6, i }); ly2 += lbh + 6;
+  g.globalAlpha = 1;
+
+  // 2. Top-Center Dan the Man 3D Logo
+  const sc = VH < 240 ? 2 : 3;
+  const logoTop = VH < 240 ? 4 : 8;
+  const logoBottom = drawDanLogo(g, VW / 2, logoTop, sc, t);
+
+  // 3. Top-Right: Gold Sticker Capsule Pill Counter (Dan the Man style)
+  const num = String(m.stickers || 0).padStart(4, '0');
+  const pillW = 82, pillH = 18, pillX = VW - pillW - 8, pillY = 6;
+  g.fillStyle = '#07060f'; g.fillRect(pillX - 2, pillY - 1, pillW + 4, pillH + 2);
+  g.fillStyle = '#1e1b4b'; g.fillRect(pillX, pillY, pillW, pillH);
+  g.fillStyle = '#facc15'; g.fillRect(pillX + 1, pillY + 1, pillW - 2, 1);
+  // Gold sticker icon
+  draw(g, SPR.sticker, Math.floor(t * 6) % 4, pillX + 2, pillY + 16, false);
+  // Number
+  text(g, num, pillX + 38, pillY + 5, '#fde047', 1.2, 0.5, '#07060f');
+  // Plus (+) button
+  g.fillStyle = '#07060f'; g.fillRect(pillX + pillW - 17, pillY + 2, 15, 14);
+  g.fillStyle = '#f97316'; g.fillRect(pillX + pillW - 16, pillY + 3, 13, 12);
+  g.fillStyle = '#ea580c'; g.fillRect(pillX + pillW - 16, pillY + 13, 13, 2);
+  text(g, '+', pillX + pillW - 10, pillY + 5, '#ffffff', 1.2, 0.5, '#07060f');
+
+  // 4. Top-Left: Hero Avatar Button (Dan the Man "CHARACTERS" style)
+  const heroBtnW = 34, heroBtnH = 34, heroBtnX = 8, heroBtnY = 6;
+  g.fillStyle = '#07060f'; g.fillRect(heroBtnX - 2, heroBtnY - 2, heroBtnW + 4, heroBtnH + 4);
+  g.fillStyle = '#1e3a8a'; g.fillRect(heroBtnX, heroBtnY, heroBtnW, heroBtnH);
+  g.fillStyle = '#60a5fa'; g.fillRect(heroBtnX + 1, heroBtnY + 1, heroBtnW - 2, 1);
+  // Mini hero face
+  const akinIdle = sprites('akin', ['idle']).idle;
+  const hfr = akinIdle[Math.floor(t * 5) % akinIdle.length];
+  g.drawImage(hfr, 16, 8, 32, 32, heroBtnX + 1, heroBtnY + 1, 32, 32);
+  // Label below
+  g.fillStyle = '#07060f'; g.fillRect(heroBtnX - 3, heroBtnY + heroBtnH - 7, heroBtnW + 6, 9);
+  g.fillStyle = '#3b82f6'; g.fillRect(heroBtnX - 2, heroBtnY + heroBtnH - 6, heroBtnW + 4, 7);
+  text(g, 'KAHRAMAN', heroBtnX + heroBtnW / 2, heroBtnY + heroBtnH - 5, '#ffffff', 0.8, 0.5);
+
+  // 5. Right-Side Stack: DÜKKÂN (3) and KONTROLLER (4)
+  const rBtnW = 38, rBtnH = 36, rBtnX = VW - rBtnW - 8;
+  let ry = logoBottom + 4;
+  [
+    [3, 'DÜKKÂN', '#f59e0b', '#fbbf24', 'shop'],
+    [4, 'KONTROL', '#3b82f6', '#60a5fa', 'pad'],
+  ].forEach(([idx, lab, c1, c2, icon]) => {
+    const isSel = sel === idx;
+    const byy = isSel ? ry - 2 : ry;
+    if (isSel) {
+      g.fillStyle = GOLD; g.fillRect(rBtnX - 4, byy - 4, rBtnW + 8, rBtnH + 8);
+    }
+    g.fillStyle = '#07060f'; g.fillRect(rBtnX - 2, byy - 2, rBtnW + 4, rBtnH + 4);
+    g.fillStyle = '#1e293b'; g.fillRect(rBtnX, byy, rBtnW, rBtnH);
+    g.fillStyle = isSel ? c2 : c1; g.fillRect(rBtnX + 1, byy + 1, rBtnW - 2, 2);
+
+    // Icon
+    if (icon === 'shop') {
+      // Golden prize cup / medal
+      g.fillStyle = '#fde047';
+      g.fillRect(rBtnX + 13, byy + 6, 12, 10);
+      g.fillRect(rBtnX + 11, byy + 7, 2, 5);
+      g.fillRect(rBtnX + 25, byy + 7, 2, 5);
+      g.fillStyle = '#ca8a04'; g.fillRect(rBtnX + 17, byy + 16, 4, 3);
+      g.fillRect(rBtnX + 14, byy + 19, 10, 2);
+    } else {
+      // Gamepad icon
+      g.fillStyle = '#94a3b8'; g.fillRect(rBtnX + 10, byy + 9, 18, 10);
+      g.fillStyle = '#07060f';
+      g.fillRect(rBtnX + 13, byy + 12, 5, 2); g.fillRect(rBtnX + 15, byy + 10, 2, 5); // dpad
+      g.fillStyle = '#ef4444'; g.fillRect(rBtnX + 22, byy + 11, 2, 2); // btn a
+      g.fillStyle = '#facc15'; g.fillRect(rBtnX + 24, byy + 14, 2, 2); // btn b
+    }
+    // Label
+    g.fillStyle = '#07060f'; g.fillRect(rBtnX - 3, byy + rBtnH - 8, rBtnW + 6, 10);
+    g.fillStyle = isSel ? '#2563eb' : '#1e3a8a'; g.fillRect(rBtnX - 2, byy + rBtnH - 7, rBtnW + 4, 8);
+    text(g, lab, rBtnX + rBtnW / 2, byy + rBtnH - 6, isSel ? GOLD : PAPER, 0.8, 0.5);
+
+    rects.push({ x: rBtnX - 2, y: byy - 2, w: rBtnW + 4, h: rBtnH + 4, i: idx });
+    ry += rBtnH + 8;
   });
-  // sticker counter
-  const num = String(m.stickers || 0).padStart(4, '0'), bw = 12 + 6 + num.length * 6 + 8;
-  g.fillStyle = INK; g.fillRect(VW - bw - 6, 3, bw + 4, 17); g.fillStyle = '#1e1b3a'; g.fillRect(VW - bw - 4, 5, bw, 13);
-  draw(g, SPR.sticker, Math.floor(t * 6) % 4, VW - bw + 2, 15);
-  text(g, num, VW - 8, 8, GOLD, 1, 1);
-  // gear
-  const gs = clamp(Math.round(u * 0.09), 20, 30), gx = VW - gs - 6, gy = VH - gs - 4, gsel = sel === 5, yy = lbox(g, gx, gy, gs, gs, '#6d28d9', '#c4b5fd', gsel);
-  drawGear(g, gx + Math.round((gs - Math.floor(gs * 0.6 / 12) * 12) / 2) + 0, yy + Math.round((gs - Math.floor(gs * 0.6 / 12) * 12) / 2), Math.floor(gs * 0.6), gsel ? GOLD : PAPER);
-  rects.push({ x: gx - 2, y: gy - 3, w: gs + 4, h: gs + 6, i: 5 });
-  text(g, 'CODE JAM TEMASI: BOUNCE BACK', VW / 2, VH - 9, '#a9bdd8', 1, 0.5, INK);
+
+  // 6. Bottom-Right: Gear Button for AYARLAR (5)
+  const gs = clamp(Math.round(u * 0.1), 22, 28);
+  const gx = VW - gs - 8, gy = VH - gs - 6;
+  const isGearSel = sel === 5;
+  const gyy = isGearSel ? gy - 2 : gy;
+  if (isGearSel) { g.fillStyle = GOLD; g.fillRect(gx - 4, gyy - 4, gs + 8, gs + 8); }
+  g.fillStyle = '#07060f'; g.fillRect(gx - 2, gyy - 2, gs + 4, gs + 4);
+  g.fillStyle = '#1e3a8a'; g.fillRect(gx, gyy, gs, gs);
+  g.fillStyle = '#3b82f6'; g.fillRect(gx + 1, gyy + 1, gs - 2, 2);
+  drawGear(g, gx + Math.round((gs - Math.floor(gs * 0.6 / 12) * 12) / 2), gyy + Math.round((gs - Math.floor(gs * 0.6 / 12) * 12) / 2), Math.floor(gs * 0.6), isGearSel ? GOLD : PAPER);
+  rects.push({ x: gx - 2, y: gyy - 2, w: gs + 4, h: gs + 4, i: 5 });
+
+  // -------------------------------------------------------------
+  // 7. CENTERPIECE: DAN THE MAN 3-CARD DIORAMA CAROUSEL!
+  // Left: MACERA (0) | Center Diamond: HİKÂYE (1) | Right: ÇEVRİM İÇİ (2)
+  // -------------------------------------------------------------
+  const cardW = clamp(Math.round(u * 0.38), 64, 94);
+  const cardH = clamp(Math.round(u * 0.44), 72, 106);
+  const diaSize = Math.round(cardW * 1.18); // Elevated center diamond
+  const gap = Math.max(8, Math.round(u * 0.03));
+  const cx = Math.round(VW / 2);
+  const totalW = cardW + gap + diaSize + gap + cardW;
+  const baseX = Math.round(cx - totalW / 2);
+  const cyCards = Math.round(VH * 0.64);
+
+  // ---- (0) LEFT CARD: MACERA (ADVENTURE)
+  {
+    const isSel = sel === 0;
+    const cw = cardW, ch = cardH;
+    const x = baseX, y = isSel ? cyCards - Math.round(ch / 2) - 3 : cyCards - Math.round(ch / 2);
+
+    // Golden halo when selected
+    if (isSel) {
+      g.fillStyle = GOLD;
+      g.fillRect(x - 4, y - 4, cw + 8, ch + 8 + 10);
+    }
+    // Outer border
+    g.fillStyle = '#07060f';
+    g.fillRect(x - 2, y - 2, cw + 4, ch + 4 + 8);
+    // Card backdrop
+    g.fillStyle = '#1e1b4b';
+    g.fillRect(x, y, cw, ch);
+    // Header gradient
+    g.fillStyle = '#312e81';
+    g.fillRect(x, y, cw, 16);
+
+    // Mini Island & Akın Hero Diorama
+    const islY = y + ch - 22;
+    drawMiniIsland(g, x + 6, islY, cw - 12);
+    // Akın sprite bobbing proudly
+    const akinSpr = sprites('akin', ['idle']).idle;
+    const fr = akinSpr[Math.floor(t * 5) % akinSpr.length];
+    const sprSize = Math.min(52, cw - 8);
+    draw64(g, fr, x + (cw - sprSize) / 2, islY - sprSize + 8, sprSize);
+
+    // Bottom Plaque: MACERA
+    const py = y + ch - 6;
+    g.fillStyle = '#07060f'; g.fillRect(x - 1, py - 1, cw + 2, 16);
+    g.fillStyle = isSel ? '#fbbf24' : '#f59e0b'; g.fillRect(x, py, cw, 14);
+    g.fillStyle = '#d97706'; g.fillRect(x, py + 11, cw, 3);
+    text(g, 'MACERA', x + cw / 2, py + 3, '#fff7ed', 1.2, 0.5, '#07060f');
+
+    rects.push({ x: x - 2, y: y - 2, w: cw + 4, h: ch + 14, i: 0 });
+  }
+
+  // ---- (1) CENTER CARD: HİKÂYE (STORY) — THE DAN THE MAN DIAMOND!
+  {
+    const isSel = sel === 1;
+    const dw = diaSize, dh = diaSize;
+    const x = Math.round(cx - dw / 2);
+    const y = isSel ? cyCards - Math.round(dh / 2) - 8 : cyCards - Math.round(dh / 2) - 4;
+
+    // Diamond path points
+    const pTop = [cx, y];
+    const pRight = [cx + dw / 2, y + dh / 2];
+    const pBottom = [cx, y + dh];
+    const pLeft = [cx - dw / 2, y + dh / 2];
+
+    // Glow halo when selected
+    if (isSel) {
+      g.save();
+      g.beginPath();
+      g.moveTo(cx, y - 5);
+      g.lineTo(cx + dw / 2 + 5, y + dh / 2);
+      g.lineTo(cx, y + dh + 5);
+      g.lineTo(cx - dw / 2 - 5, y + dh / 2);
+      g.closePath();
+      g.fillStyle = GOLD;
+      g.fill();
+      g.restore();
+    }
+
+    // Outer dark border
+    g.save();
+    g.beginPath();
+    g.moveTo(pTop[0], pTop[1] - 3);
+    g.lineTo(pRight[0] + 3, pRight[1]);
+    g.lineTo(pBottom[0], pBottom[1] + 3);
+    g.lineTo(pLeft[0] - 3, pLeft[1]);
+    g.closePath();
+    g.fillStyle = '#07060f';
+    g.fill();
+
+    // Diamond interior (clipped to show the 3 heroes together!)
+    g.beginPath();
+    g.moveTo(pTop[0], pTop[1]);
+    g.lineTo(pRight[0], pRight[1]);
+    g.lineTo(pBottom[0], pBottom[1]);
+    g.lineTo(pLeft[0], pLeft[1]);
+    g.closePath();
+    g.fillStyle = '#172554'; // Deep navy blue
+    g.fill();
+    g.clip();
+
+    // Diamond border highlight
+    g.strokeStyle = isSel ? '#60a5fa' : '#2563eb';
+    g.lineWidth = 4;
+    g.stroke();
+
+    // Backdrop stars inside diamond
+    g.fillStyle = '#38bdf8';
+    g.fillRect(cx - 12, y + 14, 2, 2);
+    g.fillRect(cx + 18, y + 22, 2, 2);
+    g.fillRect(cx - 24, y + 36, 1, 1);
+
+    // --- The Trio of Heroes Diorama inside Diamond!
+    const baseHeroY = y + dh - 12;
+    const heroSize = Math.min(48, Math.round(dw * 0.48));
+
+    // Left: Tuna
+    const tunaIdle = sprites('tuna', ['idle']).idle;
+    const tFr = tunaIdle[Math.floor(t * 5 + 1) % tunaIdle.length];
+    draw64(g, tFr, cx - dw * 0.36, baseHeroY - heroSize + 2, heroSize - 4);
+
+    // Right: Mert
+    const mertIdle = sprites('mert', ['idle']).idle;
+    const mFr = mertIdle[Math.floor(t * 5 + 2) % mertIdle.length];
+    draw64(g, mFr, cx + dw * 0.05, baseHeroY - heroSize + 2, heroSize - 4);
+
+    // Center Front: Özgür with his Royal Crown!
+    const ozgIdle = sprites('ozgur', ['idle']).idle;
+    const oFr = ozgIdle[Math.floor(t * 5) % ozgIdle.length];
+    draw64(g, oFr, cx - heroSize / 2, baseHeroY - heroSize - 2, heroSize + 4);
+
+    // Devin mascot peeking from the top
+    draw(g, SPR.devin, Math.floor(t * 4) % 4, cx - 10, y + 22, false);
+
+    g.restore();
+
+    // --- Vibrant Green Ribbon / Pendant Under Diamond: HİKÂYE
+    const ribW = Math.round(dw * 0.82), ribH = 18;
+    const ribX = Math.round(cx - ribW / 2), ribY = y + dh - 10;
+    // Ribbon shadow & border
+    g.fillStyle = '#07060f';
+    g.beginPath();
+    g.moveTo(ribX - 2, ribY - 1);
+    g.lineTo(ribX + ribW + 2, ribY - 1);
+    g.lineTo(cx, ribY + ribH + 4);
+    g.closePath();
+    g.fill();
+    // Ribbon body
+    g.fillStyle = isSel ? '#4ade80' : '#22c55e';
+    g.beginPath();
+    g.moveTo(ribX, ribY);
+    g.lineTo(ribX + ribW, ribY);
+    g.lineTo(cx, ribY + ribH + 2);
+    g.closePath();
+    g.fill();
+    g.fillStyle = '#15803d';
+    g.fillRect(ribX, ribY, ribW, 2);
+    // Story text
+    text(g, 'HİKÂYE', cx, ribY + 3, isSel ? GOLD : PAPER, 1.3, 0.5, '#07060f');
+
+    rects.push({ x: cx - dw / 2 - 4, y: y - 4, w: dw + 8, h: dh + 18, i: 1 });
+  }
+
+  // ---- (2) RIGHT CARD: ÇEVRİM İÇİ (ONLINE / SURVIVAL)
+  {
+    const isSel = sel === 2;
+    const cw = cardW, ch = cardH;
+    const x = baseX + cardW + gap + diaSize + gap;
+    const y = isSel ? cyCards - Math.round(ch / 2) - 3 : cyCards - Math.round(ch / 2);
+
+    // Golden halo when selected
+    if (isSel) {
+      g.fillStyle = GOLD;
+      g.fillRect(x - 4, y - 4, cw + 8, ch + 8 + 10);
+    }
+    // Outer border
+    g.fillStyle = '#07060f';
+    g.fillRect(x - 2, y - 2, cw + 4, ch + 4 + 8);
+    // Card backdrop
+    g.fillStyle = '#1e1b4b';
+    g.fillRect(x, y, cw, ch);
+    // Header gradient
+    g.fillStyle = '#4c1d95';
+    g.fillRect(x, y, cw, 16);
+
+    // Cyber battle diorama: Mini Arcade Cabinet & Gökoz fighter
+    const botY = y + ch - 12;
+    drawMiniArcade(g, x + 6, botY - 20);
+
+    // Gökoz sprite ready for battle
+    const gokozSpr = sprites('gokoz', ['idle']).idle;
+    const fr = gokozSpr[Math.floor(t * 5) % gokozSpr.length];
+    const sprSize = Math.min(52, cw - 8);
+    draw64(g, fr, x + cw - sprSize + 2, botY - sprSize + 6, sprSize);
+
+    // Neon glowing CANLI / PVP badge on top-right
+    const badgeW = 28, badgeH = 10;
+    const bx = x + cw - badgeW - 2, by = y + 2;
+    g.fillStyle = '#07060f'; g.fillRect(bx - 1, by - 1, badgeW + 2, badgeH + 2);
+    g.fillStyle = '#22c55e'; g.fillRect(bx, by, badgeW, badgeH);
+    // Blinking dot
+    if (Math.floor(t * 3) % 2 === 0) {
+      g.fillStyle = '#ffffff'; g.fillRect(bx + 3, by + 3, 3, 3);
+    }
+    text(g, 'CANLI', bx + 16, by + 1, '#ffffff', 0.8, 0.5, '#07060f');
+
+    // Bottom Plaque: ÇEVRİM İÇİ
+    const py = y + ch - 6;
+    g.fillStyle = '#07060f'; g.fillRect(x - 1, py - 1, cw + 2, 16);
+    g.fillStyle = isSel ? '#c084fc' : '#8b5cf6'; g.fillRect(x, py, cw, 14);
+    g.fillStyle = '#6d28d9'; g.fillRect(x, py + 11, cw, 3);
+    text(g, 'ÇEVRİM İÇİ', x + cw / 2, py + 3, '#fff7ed', 1.1, 0.5, '#07060f');
+
+    rects.push({ x: x - 2, y: y - 2, w: cw + 4, h: ch + 14, i: 2 });
+  }
+
+  // 8. Footer Theme Text
+  text(g, 'CODE JAM TEMASI: BOUNCE BACK • DÜŞERSEN GERİ SEK', VW / 2, VH - 8, '#818cf8', 1, 0.5, '#07060f');
+
   return rects;
 }
 function draw64(g, c, x, y, s) { const d = g.imageSmoothingEnabled; g.imageSmoothingEnabled = false; g.drawImage(c, 0, 0, c.width, c.height, Math.round(x), Math.round(y), s, s); g.imageSmoothingEnabled = d; }
