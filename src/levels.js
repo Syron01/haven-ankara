@@ -1,4 +1,4 @@
-// Level layouts and story scripts. Tiles: 0 empty, 1 solid, 2 one-way platform, 3 glitch spikes.
+// Level layouts. Tiles: 0 empty, 1 solid, 2 one-way platform, 3 glitch spikes.
 export const GR = 15; // ground row (tile units); world is 18 rows tall
 export const ROWS = 18;
 
@@ -169,54 +169,3 @@ function chapter5() {
 }
 
 export const CHAPTERS = [chapter1, chapter2, chapter3, chapter4, chapter5];
-
-export const STORY = {
-  intro1: [
-    ['devin', "HAVEN ANKARA'YA HOŞ GELDİN AKIN! 48 SAAT, BİR OYUN, SINIRSIZ ÇAY."],
-    ['akin', 'SINIRSIZ ÇAY MI? TAMAM, KALDIM.'],
-    ['mert', "KAYIT ŞURADA. STICKER'INI AL, PRİZ KAPMACA BAŞLAMADAN OTUR."],
-    ['tuna', 'PRİZ KAPMACA DÜN BAŞLADI MERT. BEN ÜÇ ÇOKLU PRİZ SAKLADIM.'],
-    ['gokoz', 'BENİM FİKİR ŞU: OYUNUMUZDA DÖNER UÇSUN. FİZİĞİNE SONRA BAKARIZ.'],
-    ['ozgur', "SHOWCASE'E KADAR HER ŞEY KONTROLÜM ALTINDA. HİÇBİR ŞEY TERS GİD-"],
-    ['buglord', "TERS GİTMEK Mİ DEDİNİZ? BEN BUG LORD! SHOWCASE'İNİZ ARTIK BENİM!"],
-    ['buglord', 'ŞU KARİZMATİK ORGANİZATÖRÜ DE ALIYORUM. PRENSESSİZ HİKÂYE OLMAZ!'],
-    ['ozgur', 'PRENSES Mİ?! BARİ TACIM DÜZGÜN OLSUN... AKIN, LAPTOPUMA DOKUNMA!', 'kidnap'],
-    ['devin', "ÖZGÜR'Ü KAÇIRDI! HER YER GLITCH DOLDU! AKIN, YUMRUKLARIN ŞARJLI MI?"],
-    ['akin', 'GÖZLÜĞÜM TAKILI. YETERİNCE ŞARJLIYIM.'],
-  ],
-  goblinIntro: [
-    ['goblin', 'TİK TAK TİK TAK! TESLİME ÜÇ DAKİKA KALDI! PANİK YAPIN!'],
-    ['akin', 'SEN DE KİMSİN?'],
-    ['goblin', 'DEADLINE GOBLIN! HER PROJENİN SON GECESİNDE BEN VARIM!'],
-    ['devin', 'KOŞARKEN DUVARA TOSLARSA SERSEMLİYOR, O ZAMAN VUR! BEN VURAMAM, KOLLARIM KISA.'],
-  ],
-  outro1: [
-    ['goblin', 'TESLİM... ERTELENDİ...'],
-    ['mert', "BUG FIXED! ÖZGÜR'ÜN İZİ KIZILAY'A GİDİYOR."],
-    ['tuna', 'BEN BURADA KALIP LAPTOPLARI KURTARIYORUM. SEN YOLA DEVAM ET.'],
-    ['gokoz', "BUG LORD SHOWCASE EKRANINI İSTİYOR. ÖNCE KIZILAY'I GEÇMEN LAZIM."],
-    ['akin', "KIZILAY'DA AKŞAM TRAFİĞİ... ASIL BOSS O."],
-    ['devin', "HADİ! EGO'YU BEKLEMEYELİM, YÜRÜYEREK DAHA HIZLI."],
-  ],
-  intro2: [
-    ['devin', 'KIZILAY! NEONLAR, SİMİTÇİLER VE... HER YERDE GLITCH.'],
-    ['akin', 'DÖNERCİYE DOKUNMASINLAR DA GERİSİ KOLAY.'],
-    ['devin', 'ŞEY... O KONUDA KÖTÜ BİR HABERİM OLABİLİR.'],
-    ['akin', 'DEVİN.'],
-    ['devin', 'YÜRÜ YÜRÜ, BELKİ YANLIŞ GÖRMÜŞÜMDÜR!'],
-  ],
-  donerIntro: [
-    ['doner', 'BEN DÖNER OVERLORD! BUG LORD BANA BİLİNÇ VERDİ, BEN DE ONA SADAKAT!'],
-    ['akin', 'BİR DÖNER... KONUŞUYOR.'],
-    ['doner', 'ARTIK KİMSE BENİ YARIM EKMEĞE KOYAMAYACAK! AYRAN DA BENİM!'],
-    ['devin', 'DÖNERKEN DOKUNMA! DURUNCA BAŞI DÖNÜYOR, O ZAMAN GİR. LAVAŞ KALKANINA TOPAÇ AT!'],
-    ['akin', 'AFFET USTA. KİŞİSEL DEĞİL. ...BİRAZ KİŞİSEL.'],
-  ],
-  outro2: [
-    ['doner', 'BOL... SOĞANLI... OLSUN...'],
-    ['ozgur', "(TELSİZDEN) AKIN! BUG LORD BENİ TUNALI'YA GÖTÜRÜYOR! BU TAÇ DA ÇOK AĞIR!"],
-    ['akin', 'DAYAN ÖZGÜR! BİR ÇAY İÇEYİM, HEMEN GELİYORUM.'],
-    ['devin', 'KIZILAY KURTULDU! SIRADAKİ DURAK TUNALI. O BÖLÜM HÂLÂ DERLENİYOR AMA.'],
-    ['devin', "YANİ: DEVAMI SONRAKİ BUILD'DE. O ZAMANA KADAR DÜKKÂNA UĞRA, GÜÇLEN!"],
-  ],
-};

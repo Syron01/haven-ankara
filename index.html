@@ -9,7 +9,7 @@
   html, body { margin: 0; height: 100%; background: #0b0916; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   #game { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
   #pad, #pauseBtn { display: none; }
-  body.touch[data-state="play"] #pad, body.touch[data-state="dialog"] #pad { display: block; }
+  body.touch[data-state="play"] #pad, body.touch[data-state="cut"] #pad { display: block; }
   body.touch[data-state="play"] #pauseBtn, body.touch[data-state="pause"] #pauseBtn { display: flex; }
   .tb { position: fixed; width: 15vmin; height: 15vmin; min-width: 46px; min-height: 46px; max-width: 84px; max-height: 84px; border-radius: 50%; box-sizing: border-box;
     background: rgba(255, 247, 237, 0.16); border: 3px solid rgba(255, 247, 237, 0.5); color: #fff7ed; font: 700 5vmin/1 ui-monospace, Menlo, Consolas, monospace;

@@ -1,4 +1,4 @@
-// HUD, dialogue boxes, menus and overlays. Everything is drawn on the game canvas with the pixel font.
+// HUD, menus and overlays. Everything is drawn on the game canvas with the pixel font.
 import { text, textW, wrap, cv, clamp } from './gfx.js';
 import { SPR, draw } from './art.js';
 
