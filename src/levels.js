@@ -42,7 +42,7 @@ function chapter1() {
   L.spikes(111, 114); L.plat(110, 115, 12); L.coins(111, 4, 11);
   L.hints.push({ x: 116, t: 'AŞAĞI + K HAVAYA KALDIRIR. HAVADA J İLE DEVAM ET!' });
   L.arenas.push({ x0: 118, x1: 148, waves: [['bot', 'imp', 'imp'], ['knight', 'slime', 'bot']] });
-  L.hints.push({ x: 120, t: 'ŞÖVALYENİN KALKANI SAĞLAM: KOMBOYU BİTİR YA DA ARKASINA GEÇ.' });
+  L.hints.push({ x: 120, t: 'ŞÖVALYENİN KALKANI SAĞLAM: KOMBOYU BİTİR YA DA ARKASINA GEÇ.' }, { x: 138, t: 'DARBE YEDİN Mİ? YERE DÜŞERKEN ZIPLA: BOUNCE BACK!' });
   L.pit(150, 153); L.plat(151, 152, 13);
   L.plat(156, 158, 12); L.plat(160, 162, 9); L.plat(156, 158, 6); L.e('rozet', 157, { row: 5 }); L.coins(160, 3, 8); L.e('doneri', 161, { row: 8 });
   L.e('crate', 164, { drop: 'sapan' }); L.e('knight', 169); L.e('bot', 172); L.coins(166, 5);
@@ -79,7 +79,96 @@ function chapter2() {
   return L;
 }
 
-export const CHAPTERS = [chapter1, chapter2];
+
+function chapter3() {
+  const L = builder(222);
+  Object.assign(L, { id: 3, name: 'TUNALI GÖREVİ', sub: 'TUNALI HİLMİ, GECE', theme: 'night', music: 'night', intro: 'intro3', outro: 'outro3', start: 3, plats: 'awning', park: [104, 157], pond: [110, 126] });
+  L.zones = [{ x0: 0, x1: 103, set: 'nt' }, { x0: 104, x1: 157, set: 'ng' }, { x0: 158, x1: 221, set: 'nt' }];
+  L.ground(0, 221);
+  for (const x of [5, 30, 56, 78, 98, 106, 130, 146, 166, 190, 212]) L.p('lamp', x);
+  // --- cafés
+  L.p('cafe', 9); L.p('cafe', 18); L.p('bench', 27, { cat: true }); L.p('cafe', 36); L.p('bin', 45); L.p('cafe', 52); L.p('cafe', 62);
+  L.hints.push({ x: 6, t: 'KIRMIZI YAYLARA BAS, YUKARI FIRLA! HAVADA BİR KEZ DAHA ZIPLAMAYI DA UNUTMA.' });
+  L.e('pad', 13); L.plat(16, 21, 6); L.coins(16, 6, 5); L.e('rozet', 19, { row: 5 });
+  L.e('crate', 24, { drop: 'stickers' }); L.e('troll', 27); L.e('imp', 31);
+  L.e('flag', 34, { npc: 'tuna', gift: 'klavye', say: 'KAFEDE KOD YAZARKEN KULLANDIĞIM KLAVYE. AL, SERT VURUR!' });
+  L.hints.push({ x: 36, t: 'YORUM TROLLERİ UZAKTAN KAHVE FIRLATIR. YAKLAŞ YA DA DASH AT!' });
+  L.arenas.push({ x0: 38, x1: 68, waves: [['troll', 'imp'], ['troll', 'bot', 'slime'], ['knight', 'troll', 'imp']] });
+  // --- bookstore and record shop
+  L.p('bookstall', 70); L.p('recstall', 82); L.p('bin', 92); L.p('bookstall', 96);
+  L.hints.push({ x: 71, t: 'KİTAPÇININ ÜSTÜNDE BİR ŞEY PARLIYOR. YAYI KULLAN!' });
+  L.e('pad', 73); L.plat(76, 81, 6); L.coins(76, 6, 5); L.e('rozet', 78, { row: 5 }); L.e('cay', 80, { row: 5 });
+  L.e('troll', 86); L.e('bot', 90); L.spikes(88, 91); L.plat(87, 92, 12); L.coins(88, 4, 11);
+  L.e('crate', 94, { drop: 'topac' }); L.e('knight', 97);
+  L.e('flag', 100, { npc: 'gokoz', gift: 'doneri', say: 'PLAKÇIDAN DÖNER KOKUSU GELİYOR... YOK YOK, BENDEN AL.' });
+  // --- Kuğulu Park
+  L.hints.push({ x: 103, t: 'KUĞULU PARK! GÖLETE DÜŞME, SU SOĞUK. KÜTÜKLERDEN ATLA.' });
+  L.pit(110, 126); for (const x of [112, 116, 120, 124]) L.plat(x, x + 1, 14);
+  L.coins(112, 2, 12); L.coins(116, 2, 11); L.coins(120, 2, 12); L.coins(124, 2, 11);
+  L.p('swan', 114.2, { y: 13.9 }); L.p('swan', 118.2, { y: 13.9 }); L.p('swan', 122.2, { y: 13.9 }); L.p('reeds', 108); L.p('reeds', 127); L.p('reeds', 128.6);
+  L.p('tree', 105); L.p('bench', 108.5); L.p('tree', 132); L.p('bench', 142, { cat: true }); L.p('tree', 150); L.p('bench', 154);
+  L.e('slime', 129); L.e('crate', 131, { drop: 'stickers' });
+  L.arenas.push({ x0: 130, x1: 160, waves: [['troll', 'troll', 'slime'], ['bot', 'bot', 'knight'], ['troll', 'imp', 'imp', 'bot']] });
+  L.e('flag', 162, { npc: 'mert', gift: 'topac', say: 'KUĞULAR SALDIRMADI, İYİ İŞ! TOPAÇ SENDE KALSIN.' });
+  // --- the plaza
+  L.p('recstall', 168); L.p('cafe', 176); L.p('bookstall', 184);
+  L.e('pad', 166); L.plat(169, 174, 6); L.coins(169, 6, 5);
+  L.e('slime', 172); L.e('troll', 177); L.e('crate', 179, { drop: 'sapan' });
+  L.hints.push({ x: 181, t: 'SPAM MAGE! ZARFLARI YUMRUKLA GERİ GÖNDER, SERSEMLER. BOTLARI DA KIR!' });
+  L.arenas.push({ x0: 185, x1: 217, boss: 'spam', cut: 'spamIntro' });
+  return L;
+}
+
+function chapter4() {
+  const L = builder(172);
+  Object.assign(L, { id: 4, name: 'SESSİZ YÜRÜYÜŞ', sub: 'ANITKABİR YOLU, GÜN DOĞARKEN', theme: 'dawn', music: 'dawn', intro: 'intro4', outro: 'outro4', start: 3, plats: 'awning', goal: 166, calm: 86 });
+  L.zones = [{ x0: 0, x1: 39, set: 'dv' }, { x0: 40, x1: 85, set: 'dg' }, { x0: 86, x1: 171, set: 'av' }];
+  L.ground(0, 171);
+  // --- streets and park: a little scuffle on the way
+  for (const x of [6, 30, 52, 76]) L.p('lamp', x);
+  L.p('stop', 14); L.p('bench', 20); L.p('bin', 33); L.p('tree', 44); L.p('bench', 60, { cat: true }); L.p('tree', 70);
+  L.hints.push({ x: 6, t: 'SABAH SERİN. ÖNCE ŞU GLITCH ARTIKLARINI TEMİZLEYELİM.' });
+  L.e('slime', 11); L.e('imp', 16); L.coins(18, 4); L.e('crate', 22, { drop: 'cay' });
+  L.arenas.push({ x0: 24, x1: 54, waves: [['slime', 'imp'], ['bot', 'imp', 'slime']] });
+  L.e('flag', 38, { npc: 'gokoz', gift: 'cay', say: 'SABAH ÇAYI. YOLUN UZUN, YAVAŞ YAVAŞ GİDELİM.' });
+  L.e('bot', 60); L.e('slime', 66); L.plat(62, 66, 12); L.coins(62, 5, 11);
+  L.e('flag', 82, { npc: 'mert', gift: 'simit', say: 'BUNDAN SONRASI SESSİZ. HAZIR OL AKIN.' });
+  // --- the quiet walk: no enemies, no pickups, only flags and the road
+  for (let x = 90, i = 0; x <= 162; x += 8, i++) L.p('flagpole', x, { v: i % 2 });
+  for (const x of [94, 110, 126, 142, 158]) L.p('tree', x + 3);
+  L.e('flag', 124);
+  L.npcs.push({ id: 'mert', x: 160 }, { id: 'tuna', x: 162 }, { id: 'gokoz', x: 164 });
+  return L;
+}
+
+function chapter5() {
+  const L = builder(172);
+  Object.assign(L, { id: 5, name: 'SHOWCASE FİNALİ', sub: 'ÇANKAYA GENÇLİK MERKEZİ, ANA SAHNE', theme: 'stage', music: 'stage', intro: 'intro5', outro: 'ending', start: 3, plats: 'shelf', cage: 161 });
+  L.zones = [{ x0: 0, x1: 171, set: 'sg' }];
+  L.ground(0, 171);
+  for (const x of [8, 40, 70, 100, 125]) L.p('speaker', x);
+  L.p('banner', 14, { y: 3 }); L.p('banner', 76, { y: 3 }); L.p('banner', 108, { y: 3 }); L.p('plant', 23); L.p('plant', 63);
+  L.hints.push({ x: 6, t: 'SAHNE ARKASI! KIRMIZI YAYLAR SENİ ÜST RAFLARA FIRLATIR.' });
+  L.e('pad', 12); L.plat(15, 20, 6); L.coins(15, 6, 5); L.e('rozet', 17, { row: 5 });
+  L.e('crate', 24, { drop: 'stickers' }); L.e('slime', 26); L.e('bot', 28);
+  L.arenas.push({ x0: 30, x1: 60, waves: [['troll', 'troll'], ['imp', 'imp', 'bot'], ['knight', 'troll', 'slime']] });
+  L.e('flag', 64, { npc: 'gokoz', gift: 'cay', say: 'JÜRİ SALONDA! SON DÜZLÜK, AKIN!' });
+  L.e('crate', 66, { drop: 'topac' }); L.e('troll', 69);
+  L.spikes(72, 75); L.plat(71, 76, 12); L.coins(72, 4, 11);
+  L.e('knight', 79); L.e('pad', 83); L.plat(86, 91, 6); L.coins(86, 6, 5); L.e('rozet', 88, { row: 5 });
+  L.arenas.push({ x0: 92, x1: 124, waves: [['knight', 'knight', 'troll'], ['bot', 'bot', 'imp', 'imp'], ['troll', 'troll', 'knight', 'slime']] });
+  L.e('pad', 98); L.plat(103, 108, 10); L.e('pad', 118);
+  L.e('flag', 127, { npc: 'mert', gift: 'doneri', say: 'BUG LORD SAHNEDE. HEPİMİZ ARKANDAYIZ!' });
+  L.e('crate', 129, { drop: 'doneri' });
+  L.hints.push({ x: 130, t: 'BUG LORD KRİZE GİRERSE... KALK VE ZIPLA! YERE DÜŞERKEN ZIPLAMAYI UNUTMA.' });
+  L.p('bigscreen', 140, { y: 3 }); L.p('speaker', 134); L.p('speaker', 162);
+  L.npcs.push({ id: 'mert', x: 134 }, { id: 'tuna', x: 136 }, { id: 'gokoz', x: 138 }, { id: 'ozgur', x: 161 });
+  L.e('pad', 142); L.plat(145, 152, 10); L.e('pad', 156);
+  L.arenas.push({ x0: 132, x1: 164, boss: 'buglord', cut: 'bugIntro' });
+  return L;
+}
+
+export const CHAPTERS = [chapter1, chapter2, chapter3, chapter4, chapter5];
 
 export const STORY = {
   intro1: [

@@ -1,29 +1,11 @@
 // HUD, dialogue boxes, menus and overlays. Everything is drawn on the game canvas with the pixel font.
 import { text, textW, wrap, cv, clamp } from './gfx.js';
-import { sprites } from './heroes.js';
 import { SPR, draw } from './art.js';
 
 const INK = '#141021', PAPER = '#fff7ed', RED = '#ec3750', GOLD = '#fde68a';
-const NAMES = { akin: 'AKIN', devin: 'DEVİN', mert: 'MERT', tuna: 'TUNA', gokoz: 'GÖKÖZ', ozgur: 'ÖZGÜR', buglord: 'BUG LORD', goblin: 'DEADLINE GOBLIN', doner: 'DÖNER OVERLORD' };
-const TINT = { akin: '#7cc6e8', devin: '#d9a877', mert: '#fbbf24', tuna: '#22d3ee', gokoz: '#34d399', ozgur: '#ff477e', buglord: '#a3e635', goblin: '#ef4444', doner: '#fb923c' };
+export const NAMES = { akin: 'AKIN', devin: 'DEVİN', mert: 'MERT', tuna: 'TUNA', gokoz: 'GÖKÖZ', ozgur: 'ÖZGÜR', buglord: 'BUG LORD', goblin: 'DEADLINE GOBLIN', doner: 'DÖNER OVERLORD', spam: 'SPAM MAGE', jury: 'JÜRİ' };
+export const TINT = { akin: '#7cc6e8', devin: '#d9a877', mert: '#fbbf24', tuna: '#22d3ee', gokoz: '#34d399', ozgur: '#ff477e', buglord: '#a3e635', goblin: '#ef4444', doner: '#fb923c', spam: '#f0abfc', jury: '#fde68a' };
 
-const portraits = {};
-function portrait(id) {
-  if (portraits[id]) return portraits[id];
-  const [c, g] = cv(48, 48);
-  g.fillStyle = INK; g.fillRect(0, 0, 48, 48); g.fillStyle = TINT[id]; g.fillRect(2, 2, 44, 44);
-  g.fillStyle = '#00000030'; g.fillRect(2, 30, 44, 16);
-  if (id === 'devin') g.drawImage(SPR.devin.f[0], 0, 6);
-  else if (id === 'doner') g.drawImage(SPR.doner.idle.f[0], 16, 14, 52, 52, 2, 2, 44, 44);
-  else g.drawImage(sprites(id, ['idle']).idle[0], 19, 9, 26, 26, 2, 2, 44, 44);
-  g.fillStyle = INK; g.fillRect(0, 0, 48, 2); g.fillRect(0, 46, 48, 2); g.fillRect(0, 0, 2, 48); g.fillRect(46, 0, 2, 48);
-  portraits[id] = c;
-  return c;
-}
-function panel(g, x, y, w, h, fill = PAPER) {
-  g.fillStyle = INK; g.fillRect(x - 2, y - 2, w + 4, h + 4); g.fillRect(x - 1, y + h + 2, w + 2, 2);
-  g.fillStyle = fill; g.fillRect(x, y, w, h);
-}
 function bar(g, x, y, w, h, v, col, trail, trailCol = '#ffffff') {
   g.fillStyle = INK; g.fillRect(x - 1, y - 1, w + 2, h + 2);
   g.fillStyle = '#3b3050'; g.fillRect(x, y, w, h);
@@ -65,21 +47,6 @@ export function drawHUD(g, w, VW, VH, t) {
   } else bossTrail = 1;
 }
 
-export function drawDialog(g, d, VW, VH, t) {
-  const line = d.lines[d.i], who = line[0], left = who === 'akin' || who === 'devin';
-  const h = 58, y = VH - h - 6, x = 6, w = VW - 12;
-  panel(g, x, y, w, h);
-  g.fillStyle = TINT[who]; g.fillRect(x, y, w, 3);
-  const pc = portrait(who), px = left ? x + 5 : x + w - 53;
-  g.drawImage(pc, px, y + 6);
-  const tx = left ? x + 60 : x + 8, tw = w - 68;
-  text(g, NAMES[who], tx, y + 5, who === 'devin' || who === 'akin' ? '#1d4ed8' : RED);
-  const shown = line[1].slice(0, Math.floor(d.c));
-  wrap(shown, tw).slice(0, 3).forEach((l, i) => text(g, l, tx, y + 18 + i * 11, INK));
-  if (d.c >= line[1].length && Math.floor(t * 3) % 2) text(g, '▼', x + w - (left ? 12 : 64), y + h - 13, RED);
-  text(g, d.skipLabel, VW - 8, y - 13, PAPER, 1, 1, INK);
-}
-
 // generic vertical menu; returns button rects for pointer input
 export function drawMenu(g, m, VW, VH, t) {
   const rows = m.items.length, bw = Math.min(VW - 40, m.wide ? 250 : 170), bh = 17, gap = 5;
@@ -103,9 +70,10 @@ export function drawMenu(g, m, VW, VH, t) {
   return rects;
 }
 
+export const titleScale = (VW, VH) => (VH < 250 ? 2 : VH < 275 || VW < 400 ? 3 : 4);
 export function drawTitle(g, VW, VH, t) {
   const y = Math.round(VH * 0.14);
-  const sc = VW < 400 ? 3 : 4;
+  const sc = titleScale(VW, VH);
   g.globalAlpha = 0.55; g.fillStyle = '#0b0916'; g.fillRect(0, 0, VW, y + sc * 21 + 22); g.globalAlpha = 1;
   text(g, 'HAVEN', VW / 2, y, '#141021', sc, 0.5); text(g, 'HAVEN', VW / 2 - 1, y - 2, RED, sc, 0.5); text(g, 'HAVEN', VW / 2 - 1, y - 3, '#ff8c37', sc, 0.5);
   g.save(); g.beginPath(); g.rect(0, y + sc * 5, VW, 99); g.clip(); text(g, 'HAVEN', VW / 2 - 1, y - 3, RED, sc, 0.5); g.restore();
@@ -113,18 +81,24 @@ export function drawTitle(g, VW, VH, t) {
   const sub = 'ÇAY, DÖNER VE CODE JAM';
   const sw = textW(sub) + 12;
   g.fillStyle = INK; g.fillRect(Math.round(VW / 2 - sw / 2), y + sc * 21 + 2, sw, 14); text(g, sub, VW / 2, y + sc * 21 + 4, GOLD, 1, 0.5);
+  text(g, 'CODE JAM TEMASI: BOUNCE BACK', VW / 2, VH - 13, PAPER, 1, 0.5, INK);
+}
+const CREDITS = [['HAVEN ANKARA', 3, GOLD], ['ÇAY, DÖNER VE CODE JAM', 1, PAPER], [], ['TEMA', 1, '#a5f3fc'], ['BOUNCE BACK', 2, PAPER], [], ['EKİP', 1, '#a5f3fc'],
+  ['AKIN', 2, PAPER], ['MERT', 2, PAPER], ['TUNA', 2, PAPER], ['GÖKÖZ', 2, PAPER], ['ÖZGÜR', 2, PAPER], ['DEVİN', 2, PAPER], [], ['HACK CLUB', 1, '#a5f3fc'], ['HAVEN ANKARA', 2, GOLD], [], ['OYNADIĞIN İÇİN TEŞEKKÜRLER', 1, PAPER], ['DÜŞERSEN KALK.', 2, RED]];
+// returns true once the last line has settled, so the caller can show the exit hint
+export function drawCredits(g, t, VW, VH) {
+  g.fillStyle = '#0b0916'; g.fillRect(0, 0, VW, VH);
+  for (let i = 0; i < 40; i++) { g.fillStyle = (i + Math.floor(t * 2)) % 5 ? '#3b3050' : PAPER; g.fillRect((i * 97 + 13) % VW, (i * 53 + 7) % VH, 1, 1); }
+  const hs = CREDITS.map((c) => (c.length ? c[1] * 10 + 8 : 12)), total = hs.reduce((a, b) => a + b, 0), last = hs[hs.length - 1];
+  const off = Math.min(t * 26, VH / 2 + 10 + total - last);
+  let y = VH + 10 - off;
+  CREDITS.forEach((c, i) => { if (c.length && y > -30 && y < VH) text(g, c[0], VW / 2, Math.round(y), c[2], c[1], 0.5, INK); y += hs[i]; });
+  return t * 26 >= VH / 2 + 10 + total - last;
 }
 export function drawCount(g, n, frac, VW, VH) {
   const label = n > 0 ? String(n) : 'BAŞLA!';
   const sc = n > 0 ? 6 + Math.round((1 - frac) * 2) : 4;
   text(g, label, VW / 2, VH / 2 - sc * 6, n > 0 ? GOLD : PAPER, sc, 0.5, INK);
-}
-export function drawBanner(g, lv, a, VW, VH) {
-  g.globalAlpha = clamp(a, 0, 1);
-  g.fillStyle = INK; g.fillRect(0, VH * 0.13 - 4, VW, 44); g.fillStyle = RED; g.fillRect(0, VH * 0.13 - 4, VW, 2); g.fillRect(0, VH * 0.13 + 38, VW, 2);
-  text(g, 'BÖLÜM ' + lv.id + ': ' + lv.name, VW / 2, VH * 0.13 + 2, PAPER, VW < 400 ? 1 : 2, 0.5);
-  text(g, lv.sub, VW / 2, VH * 0.13 + 25, GOLD, 1, 0.5);
-  g.globalAlpha = 1;
 }
 export function drawResult(g, w, VW, VH, total) {
   g.globalAlpha = 0.78; g.fillStyle = '#0b0916'; g.fillRect(0, 0, VW, VH); g.globalAlpha = 1;

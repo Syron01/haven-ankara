@@ -58,6 +58,8 @@ const FX = {
   go: () => { tone(780, 780, 0.1, 'square', 0.16); tone(1040, 1040, 0.25, 'square', 0.16, 0.1); },
   flag: () => { for (let i = 0; i < 3; i++) tone([523, 659, 784][i], [523, 659, 784][i], 0.1, 'triangle', 0.2, i * 0.09); },
   win: () => { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, f, 0.16, 'square', 0.16, i * 0.13)); },
+  boing: () => { tone(180, 760, 0.22, 'sine', 0.3); tone(360, 1100, 0.18, 'triangle', 0.12, 0.03); },
+  glitch: () => { noise(0.12, 0.35, 5000); tone(1400, 200, 0.1, 'square', 0.1); tone(300, 1500, 0.08, 'square', 0.08, 0.08); },
   lose: () => { [392, 349, 311, 262].forEach((f, i) => tone(f, f, 0.25, 'triangle', 0.2, i * 0.22)); },
 };
 export function sfx(name) {
@@ -71,6 +73,10 @@ const TRACKS = {
   menu: { bpm: 104, lead: N('12 - 15 - 19 - 15 12 14 - 17 - 10 - 14 - 12 - 15 - 19 22 19 15 14 - 12 - 10 - - -'), bass: N('0 - 0 - 7 - 7 - 5 - 5 - 3 - 3 5'), hat: 2 },
   hall: { bpm: 132, lead: N('12 12 15 12 17 - 15 - 12 12 15 12 19 - 17 - 10 10 14 10 15 - 14 - 12 15 19 22 19 - - -'), bass: N('0 0 - 0 3 3 - 3 5 5 - 5 7 7 5 3'), hat: 1 },
   street: { bpm: 146, lead: N('7 - 10 12 - 10 7 - 5 - 7 10 - - 3 5 7 - 10 12 - 15 14 - 12 - 10 7 - - - -'), bass: N('0 - 0 0 - 0 3 - 5 - 5 5 - 5 7 3'), hat: 1 },
+  night: { bpm: 112, lead: N('12 - - 15 - 14 - - 10 - 12 - - - - - 7 - - 10 - 12 - - 15 - 14 - - 12 - -'), bass: N('0 - - - 0 - 3 - 5 - - - 3 - 5 -'), hat: 2 },
+  dawn: { bpm: 84, soft: 1, lead: N('12 - - - 15 - - - 14 - - - 10 - - - 12 - - - 17 - - - 15 - - - 14 - - -'), bass: N('0 - - - - - - - 5 - - - - - - -') },
+  calm: { bpm: 60, soft: 1, lead: N('12 - - - - - - - 10 - - - - - - - 7 - - - - - - - 10 - - - 12 - - -'), bass: N('0 - - - - - - - - - - - - - - -') },
+  stage: { bpm: 140, lead: N('12 - 12 15 - 12 - 19 17 - 15 - 12 - 10 - 14 - 14 17 - 14 - 21 19 - 17 - 14 - 12 -'), bass: N('0 - 0 0 - 0 3 - 5 - 5 5 - 5 3 -'), hat: 1 },
   boss: { bpm: 164, lead: N('12 13 12 - 8 - 7 - 12 13 12 - 15 - 13 - 12 13 12 - 8 - 7 5 3 - 5 - 7 8 12 -'), bass: N('0 0 0 0 1 1 1 1 0 0 0 0 5 5 3 3'), hat: 1 },
 };
 function schedule() {
@@ -79,8 +85,9 @@ function schedule() {
   while (nextT < ctx.currentTime + 0.25) {
     const d = Math.max(0, nextT - ctx.currentTime);
     const l = t.lead[step % t.lead.length], b = t.bass[step % t.bass.length];
-    if (l !== null) tone(220 * Math.pow(2, l / 12), 220 * Math.pow(2, l / 12), sp * 0.9, 'square', 0.1, d, musicGain);
-    if (b !== null) tone(55 * Math.pow(2, b / 12), 55 * Math.pow(2, b / 12), sp * 0.95, 'triangle', 0.3, d, musicGain);
+    if (l !== null) tone(220 * Math.pow(2, l / 12), 220 * Math.pow(2, l / 12), sp * (t.soft ? 3.5 : 0.9), t.soft ? 'triangle' : 'square', t.soft ? 0.12 : 0.1, d, musicGain);
+    if (b !== null) tone(55 * Math.pow(2, b / 12), 55 * Math.pow(2, b / 12), sp * (t.soft ? 6 : 0.95), t.soft ? 'sine' : 'triangle', 0.3, d, musicGain);
+    if (t.soft) { nextT += sp; step++; continue; }
     if (step % t.hat === 0) noise(0.03, step % 4 === 2 ? 0.22 : 0.08, step % 4 === 2 ? 1800 : 7000, d, musicGain);
     if (step % 8 === 0) tone(120, 40, 0.1, 'sine', 0.35, d, musicGain);
     nextT += sp; step++;

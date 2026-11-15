@@ -46,6 +46,13 @@ export const CHARS = {
     pants: { base: '#22252f', light: '#313644', dark: '#15171e' }, shoes: { base: '#16181f', sole: '#64748b' },
     lanyard: '#c93b44', expr: 'intense', sig: '#ff477e', crown: '#facc15', cape: ['#db2777', '#9d174d'],
   },
+  troll: {
+    name: 'YORUM TROLÜ', skin: { base: '#e9c1a4', mid: '#d3a183', dark: '#ad7a5c', blush: '#d98470' },
+    hair: { base: '#2a1d16', mid: '#3d2c22', light: '#5a4234', style: 'curtain' }, brows: '#150d09',
+    shirt: { base: '#f97316', light: '#fb9a4a', dark: '#c2540a' },
+    pants: { base: '#3a3f4d', light: '#4f5566', dark: '#272b36' }, shoes: { base: '#f1f5f9', sole: '#94a3b8' },
+    noLanyard: true, shades: true, expr: 'smirk', sig: '#f97316',
+  },
   buglord: {
     name: 'BUG LORD', skin: { base: '#4ade80', mid: '#2fb866', dark: '#1c7a45', blush: '#2fb866' },
     hair: { style: 'none' }, brows: '#052e16',
@@ -75,6 +82,8 @@ export const CHARS = {
     lanyard: '#fbbf24', badge: ['#fef3c7', '#ef4444'], expr: 'fierce', ears: true, tusks: true, sig: '#ef4444',
   },
 };
+
+CHARS.ozgurFree = { ...CHARS.ozgur, crown: null, cape: null, expr: 'smirk' };
 
 function pose(ch, key, f) {
   const p = {

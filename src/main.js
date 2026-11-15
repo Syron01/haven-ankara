@@ -1,9 +1,12 @@
 // Entry point: screen scaling, input (keyboard + touch), save data and the game-state machine.
-import { clamp } from './gfx.js';
+import { clamp, text } from './gfx.js';
 import { buildArt } from './art.js';
-import { CHAPTERS, STORY } from './levels.js';
-import { createWorld, step, render, continueFromCheckpoint, removeStoryNpc, DT } from './game.js';
-import { drawHUD, drawDialog, drawMenu, drawTitle, drawCount, drawBanner, drawResult, drawHelp } from './ui.js';
+import { CHAPTERS } from './levels.js';
+import * as G from './game.js';
+import { createWorld, step, render, continueFromCheckpoint, DT } from './game.js';
+import { createCut } from './cutscene.js';
+import { CH_TITLES, CUTS } from './story.js';
+import { drawHUD, drawMenu, drawTitle, titleScale, drawCredits, drawCount, drawResult, drawHelp } from './ui.js';
 import { audio, unlock, sfx, music } from './audio.js';
 
 const canvas = document.getElementById('game');
@@ -72,8 +75,10 @@ window.addEventListener('touchstart', () => { if (!touch.on) { touch.on = true; 
 canvas.addEventListener('pointerdown', (e) => {
   unlock();
   const r = canvas.getBoundingClientRect(), x = ((e.clientX - r.left) / r.width) * VW, y = ((e.clientY - r.top) / r.height) * VH;
+  if (S.name === 'cut') { const b = cut.skipRect; if (x >= b.x - 4 && x <= b.x + b.w + 4 && y <= b.y + b.h + 6) cut.skip(); else if (S.armed <= 0) cut.advance(); return; }
+  if (S.name === 'credits') { if (S.armed <= 0) endCredits(); return; }
   if (S.menu && S.rects) { for (const b of S.rects) if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) { if (S.menu.sel === b.i || e.pointerType !== 'mouse') { S.menu.sel = b.i; activate(); } else S.menu.sel = b.i; return; } }
-  else if (S.name === 'dialog' || S.name === 'help') uiKey('Enter');
+  else if (S.name === 'help') uiKey('Enter');
 });
 canvas.addEventListener('pointermove', (e) => {
   if (!S.menu || !S.rects || e.pointerType !== 'mouse') return;
@@ -83,7 +88,7 @@ canvas.addEventListener('pointermove', (e) => {
 
 // ---------------------------------------------------------------- states
 const S = { name: 'title', menu: null, rects: null, t: 0, armed: 0 };
-let world = null, demo = null, dialog = null, count = 0, banner = 0, chapter = 0;
+let world = null, demo = null, cut = null, cutDone = null, creditsT = 0, creditsDone = null, count = 0, chapter = 0;
 let acc = 0, last = performance.now();
 
 function setMenu(name, menu) { S.name = name; S.menu = menu; S.rects = null; S.armed = 0.25; if (menu) { menu.sel = menu.items.findIndex((i) => !i.disabled); } document.body.dataset.state = name; }
@@ -95,12 +100,8 @@ function activate() {
 }
 function uiKey(code) {
   if (S.name === 'play') { if (code === 'Escape' || code === 'KeyP') openPause(); return; }
-  if (S.name === 'dialog') {
-    if (S.armed > 0) return;
-    if (code === 'Escape') endDialog(true);
-    else if (['Enter', 'Space', 'KeyJ', 'KeyZ'].includes(code)) { const line = dialog.lines[dialog.i]; if (dialog.c < line[1].length) dialog.c = line[1].length; else nextLine(); }
-    return;
-  }
+  if (S.name === 'cut') { if (S.armed <= 0 && ['Enter', 'Space', 'KeyJ', 'KeyZ'].includes(code)) cut.advance(); return; }
+  if (S.name === 'credits') { if (S.armed <= 0 && ['Enter', 'Space', 'Escape'].includes(code)) endCredits(); return; }
   if (S.name === 'help') { if (S.armed <= 0) S.back(); return; }
   if (!S.menu) return;
   const m = S.menu, n = m.items.length;
@@ -116,15 +117,30 @@ function openTitle() {
   if (!demo) { demo = createWorld(CHAPTERS[1], save, 1); demo.enemies.length = 0; demo.hint = null; }
   setMenu('title', { y: null, items: [
     { label: save.unlocked > 1 || save.stickers > 0 ? 'DEVAM ET' : 'OYNA', fn: openChapters },
+    { label: 'HİKAYE', fn: openStory },
     { label: 'DÜKKÂN', fn: () => openShop(openTitle) },
     { label: 'KONTROLLER', fn: () => openHelp(openTitle) },
     { label: 'AYARLAR', fn: () => openSettings(openTitle) },
   ] });
 }
+function openStory() {
+  const items = CHAPTERS.map((mk, i) => ({ label: (i + 1) + '. ' + (CH_TITLES[i] || 'BÖLÜM ' + (i + 1)), value: i < save.unlocked ? 'İZLE' : 'KİLİTLİ', disabled: i >= save.unlocked, fn: () => openStoryChapter(i) }));
+  items.push({ label: 'GERİ', fn: openTitle });
+  setMenu('story', { title: 'HİKAYE', note: 'AÇTIĞIN BÖLÜMLERİN SAHNELERİNİ TEKRAR İZLE', wide: true, dim: true, items, back: openTitle });
+}
+function openStoryChapter(i) {
+  const items = (CUTS[i] || []).map(([id, label]) => ({ label, value: 'İZLE', fn: () => replay(i, id) }));
+  items.push({ label: 'GERİ', fn: openStory });
+  setMenu('story', { title: (i + 1) + '. ' + (CH_TITLES[i] || ''), dim: true, wide: true, items, back: openStory });
+}
+function replay(i, id) {
+  const back = () => { world = null; music('menu'); openStoryChapter(i); };
+  chapter = i; world = createWorld(CHAPTERS[i], save, i); music(world.lv.music);
+  runCut(id, () => (id === 'ending' ? startCredits(back) : back()));
+}
 function openChapters() {
   const items = CHAPTERS.map((mk, i) => {
-    const names = ['KAPILAR AÇILIYOR', 'KIZILAY KAOSU'];
-    return { label: (i + 1) + '. ' + names[i], value: i < save.unlocked ? 'ROZET ' + (save.badges[i + 1] || 0) + '/2' : 'KİLİTLİ', disabled: i >= save.unlocked, fn: () => startChapter(i) };
+    return { label: (i + 1) + '. ' + (CH_TITLES[i] || 'BÖLÜM ' + (i + 1)), value: i < save.unlocked ? 'ROZET ' + (save.badges[i + 1] || 0) + '/2' : 'KİLİTLİ', disabled: i >= save.unlocked, fn: () => startChapter(i) };
   });
   items.push({ label: 'GERİ', fn: openTitle });
   setMenu('chapters', { title: 'BÖLÜM SEÇ', wide: true, dim: true, items, back: openTitle });
@@ -169,33 +185,30 @@ function openPause() {
   again();
 }
 function startChapter(i) {
-  if (S.name === 'count' || S.name === 'dialog') return; // never start twice
+  if (S.name === 'count' || S.name === 'cut') return; // never start twice
   chapter = i; world = createWorld(CHAPTERS[i], save, i);
-  music(world.lv.music); clearInput(); acc = 0; banner = 2.6;
-  startDialog(world.lv.intro, () => startCount());
+  music(world.lv.music); clearInput(); acc = 0;
+  runCut(world.lv.intro, startCount);
 }
 function startCount() { count = 2.4; S.name = 'count'; S.menu = null; document.body.dataset.state = 'play'; clearInput(); }
-function startDialog(id, done) {
-  dialog = { lines: STORY[id], i: 0, c: 0, done, skipLabel: touch.on ? 'DOKUN: DEVAM' : 'ENTER: DEVAM   ESC: GEÇ' };
-  S.name = 'dialog'; S.menu = null; S.armed = 0.35; document.body.dataset.state = 'dialog';
+function runCut(id, done) {
+  cut = createCut(world, id, VW, VH); cutDone = done;
+  S.name = 'cut'; S.menu = null; S.armed = 0.35; document.body.dataset.state = 'cut'; clearInput();
+  if (cut.done) endCut();
 }
-function lineAction(line) { if (line[2] === 'kidnap' && world) removeStoryNpc(world); }
-function nextLine() {
-  lineAction(dialog.lines[dialog.i]);
-  dialog.i++; dialog.c = 0;
-  if (dialog.i >= dialog.lines.length) endDialog(false); else sfx('ui');
+function endCut() { cut = null; clearInput(); const d = cutDone; cutDone = null; d(); }
+function startCredits(done) {
+  creditsT = 0; creditsDone = done; S.name = 'credits'; S.menu = null; S.armed = 1; document.body.dataset.state = 'credits'; music('menu');
 }
-function endDialog(skipped) {
-  if (skipped) for (let i = dialog.i; i < dialog.lines.length; i++) lineAction(dialog.lines[i]);
-  const d = dialog; dialog = null; clearInput(); d.done();
-}
+function endCredits() { const d = creditsDone; creditsDone = null; d(); }
 function resumePlay() { S.name = 'play'; S.menu = null; document.body.dataset.state = 'play'; clearInput(); last = performance.now(); }
 function onClear() {
-  startDialog(world.lv.outro, () => {
+  runCut(world.lv.outro, () => {
     save.stickers += world.stats.stickers;
     save.badges[world.lv.id] = Math.max(save.badges[world.lv.id] || 0, world.stats.badges);
     save.unlocked = Math.max(save.unlocked, Math.min(CHAPTERS.length, chapter + 2));
     world.stats.banked = true; persist(); sfx('win'); music('menu');
+    if (world.lv.outro === 'ending') return startCredits(openTitle);
     const items = [];
     if (chapter + 1 < CHAPTERS.length) items.push({ label: 'SONRAKİ BÖLÜM', fn: () => startChapter(chapter + 1) });
     items.push({ label: 'DÜKKÂN', fn: () => openShop(showResult) }, { label: 'ANA MENÜ', fn: openTitle });
@@ -219,7 +232,7 @@ function tick() {
   for (const k of ['jump', 'atk', 'kick', 'use', 'dash', 'spec']) if (inp[k] > 0) inp[k] -= DT;
   while (world.events.length) {
     const e = world.events.shift();
-    if (e.type === 'cut') startDialog(e.id, resumePlay);
+    if (e.type === 'cut') runCut(e.id, e.id === 'bugCrash' ? () => { if (G.storyAction) G.storyAction(world, 'bounceBack'); resumePlay(); } : resumePlay);
     else if (e.type === 'music') music(e.id);
     else if (e.type === 'clear') { S.name = 'clearing'; S.t = 0; }
     else if (e.type === 'gameover') onGameOver();
@@ -244,28 +257,28 @@ function frame(now) {
     const after = Math.ceil(count / 0.6);
     if (after !== before) sfx(after <= 1 ? 'go' : 'count');
     if (count <= 0.6 && S.name === 'count') { S.name = 'play'; clearInput(); acc = 0; }
-  } else if (S.name === 'dialog' && dialog) {
-    const line = dialog.lines[dialog.i], c0 = Math.floor(dialog.c);
-    dialog.c = Math.min(line[1].length, dialog.c + dt * 48);
-    if (Math.floor(dialog.c) !== c0 && Math.floor(dialog.c) % 3 === 0) sfx(line[0] === 'devin' ? 'devin' : 'talk');
-  }
-  if (banner > 0 && S.name !== 'pause') banner -= dt;
+  } else if (S.name === 'cut') {
+    cut.touch = touch.on; cut.update(dt, keys.Escape);
+    if (cut.done) endCut();
+  } else if (S.name === 'credits') creditsT += dt;
   if (world && S.name !== 'play' && S.name !== 'clearing' && world.flash > 0) world.flash -= dt;
   if (count > 0 && S.name === 'play') count -= dt;
   // draw
   const w = world || demo;
   if (!world) { demo.t += dt; demo.cam.x = (Math.sin(demo.t * 0.07) * 0.5 + 0.5) * Math.max(0, 1500 - VW) + 60; demo.player.x = -200; demo.devin.x = -200; demo.cam.y = Math.max(0, 288 - VH); }
-  render(w, g, VW, VH);
-  if (world) {
-    if (S.name !== 'result') drawHUD(g, world, VW, VH, t);
-    if (banner > 0 && S.name !== 'result') drawBanner(g, world.lv, Math.min(banner, 1) * 1.5, VW, VH);
-    if (count > 0 && (S.name === 'count' || S.name === 'play')) { const n = Math.ceil(count / 0.6) - 1; drawCount(g, n, (count / 0.6) % 1, VW, VH); }
-    if (S.name === 'dialog' && dialog) drawDialog(g, dialog, VW, VH, t);
-    if (S.name === 'result') drawResult(g, world, VW, VH, 2);
-  } else if (S.name === 'title') drawTitle(g, VW, VH, t);
+  if (S.name === 'cut' && cut) cut.render(g, VW, VH);
+  else if (S.name === 'credits') { if (drawCredits(g, creditsT, VW, VH) && Math.floor(t * 2) % 2) text(g, touch.on ? 'DOKUN: ANA MENÜ' : 'ENTER: ANA MENÜ', VW / 2, VH - 16, GOLD, 1, 0.5, '#141021'); }
+  else {
+    render(w, g, VW, VH);
+    if (world) {
+      if (S.name !== 'result') drawHUD(g, world, VW, VH, t);
+      if (count > 0 && (S.name === 'count' || S.name === 'play')) { const n = Math.ceil(count / 0.6) - 1; drawCount(g, n, (count / 0.6) % 1, VW, VH); }
+      if (S.name === 'result') drawResult(g, world, VW, VH, 2);
+    } else if (S.name === 'title') drawTitle(g, VW, VH, t);
+  }
   if (S.name === 'help') drawHelp(g, VW, VH, touch.on);
   else if (S.menu) {
-    if (S.name === 'title') S.menu.y = Math.round(VH * 0.14) + (VW < 400 ? 3 : 4) * 21 + 26;
+    if (S.name === 'title') S.menu.y = Math.round(VH * 0.14) + titleScale(VW, VH) * 21 + 26;
     S.rects = drawMenu(g, S.menu, VW, VH, t);
   }
 }
@@ -274,4 +287,4 @@ buildArt();
 resize();
 openTitle();
 requestAnimationFrame(frame);
-if (location.hash === '#debug') window.__haven = { S, get world() { return world; }, inp, get save() { return save; }, startChapter, tick, press, keys, skip: () => endDialog(true), go: () => { count = 0; S.name = 'play'; }, onClear, activate, uiKey };
+if (location.hash === '#debug') window.__haven = { S, get world() { return world; }, inp, get save() { return save; }, startChapter, tick, press, keys, skip: () => cut && cut.skip(), cutAdvance: () => cut && cut.advance(), runCut, startCredits, go: () => { count = 0; S.name = 'play'; }, onClear, activate, uiKey };
