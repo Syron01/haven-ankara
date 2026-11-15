@@ -18,7 +18,7 @@ let off = null;
 export function createCut(w, id, VW, VH) {
   const script = STORY[id] || [];
   w.VW = VW; w.VH = VH;
-  const p = w.player, arenas = w.lv.arenas || [], a = arenas.find((x) => x.cut === id), boss = w.enemies.find((e) => e.boss);
+  const p = w.player, arenas = w.lv.arenas || [], a = arenas.find((x) => x.cut === id) || (id === 'bugCrash' && arenas.find((x) => x.boss)), boss = w.enemies.find((e) => e.boss);
   const A = a ? a.x0 * TILE : id.startsWith('intro') ? w.lv.start * TILE : p.x;
   const anc = { P: a && !boss ? A + 76 : p.x, B: boss ? boss.x : a ? Math.max(a.x1 * TILE, A + VW) - 70 : A + 200 };
   // the world is paused: real actors are stashed off-stage and drawn as cutscene actors instead
@@ -67,7 +67,7 @@ export function createCut(w, id, VW, VH) {
       case 'look': if (CHARS[y] && ac[x]) { ac[x].set = sprites(y); poof(ac[x]); } break;
       case 'walk': { const o = ac[x]; if (!o) break; o.tx = rx(y); o.walking = true; if (typeof z === 'number') o.spd = z; return wait(() => o.tx === null); }
       case 'jump': { const o = ac[x]; if (!o) break; o.vy = -300; o.air = true; sfx('jump'); return wait(() => !o.air); }
-      case 'knock': { const o = ac[x]; if (!o) break; o.vy = -230; o.vx = -o.face * 120; o.air = true; o.anim = 'ko'; o.t0 = w.t; sfx('ko'); shk = Math.max(shk, 6); break; }
+      case 'knock': { const o = ac[x]; if (!o) break; o.vy = -230; o.vx = -o.face * 70; o.air = true; o.anim = 'ko'; o.t0 = w.t; sfx('ko'); shk = Math.max(shk, 6); break; }
       case 'face': { const o = ac[x]; if (o) o.face = y === 'l' ? -1 : y === 'r' ? 1 : ac[y] ? Math.sign(ac[y].x - o.x) || 1 : o.face; break; }
       case 'anim': if (ac[x]) { ac[x].anim = y; ac[x].t0 = w.t; } break;
       case 'hide': if (ac[x]) { poof(ac[x]); delete ac[x]; } break;
@@ -238,7 +238,7 @@ export function createCut(w, id, VW, VH) {
     drawScreen(og, cx, oy);
     for (const o of Object.values(ac)) paint(og, o, cx, oy);
     for (const f of w.fx) { og.fillStyle = f.col; og.fillRect(Math.round(f.x - cx), Math.round(f.y + oy), f.size, f.size); }
-    const z = view.z, px = VW0 / 2, py = VH0 * 0.62, sx = Math.round((Math.random() - 0.5) * shk * 0.5), sy = Math.round((Math.random() - 0.5) * shk * 0.5);
+    const z = view.z, px = VW0 / 2, py = FLOOR + oy - 4, sx = Math.round((Math.random() - 0.5) * shk * 0.5), sy = Math.round((Math.random() - 0.5) * shk * 0.5);
     g.fillStyle = '#000'; g.fillRect(0, 0, VW0, VH0);
     if (z === 1) g.drawImage(off, sx, sy);
     else g.drawImage(off, px - px / z, py - py / z, VW0 / z, VH0 / z, sx, sy, VW0, VH0);
