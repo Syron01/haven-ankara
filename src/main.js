@@ -1,13 +1,14 @@
 // Entry point: screen scaling, input (keyboard + touch), save data and the game-state machine.
 import { clamp, text } from './gfx.js';
 import { buildArt } from './art.js';
-import { CHAPTERS } from './levels.js';
+import { CHAPTERS, createOnlineArena } from './levels.js';
 import * as G from './game.js';
 import { createWorld, step, render, continueFromCheckpoint, DT } from './game.js';
 import { createCut } from './cutscene.js';
 import { CH_TITLES, CUTS } from './story.js';
 import { drawHUD, drawMenu, drawTitle, drawLobby, titleScale, drawCredits, drawCount, drawResult, drawHelp } from './ui.js';
 import { audio, unlock, sfx, music } from './audio.js';
+import { onlineManager, HERO_LIST, drawOnlineLobbyScreen, drawOnlineMatchHUD } from './online.js';
 
 const canvas = document.getElementById('game');
 const g = canvas.getContext('2d');
@@ -75,6 +76,23 @@ window.addEventListener('touchstart', () => { if (!touch.on) { touch.on = true; 
 canvas.addEventListener('pointerdown', (e) => {
   unlock();
   const r = canvas.getBoundingClientRect(), x = ((e.clientX - r.left) / r.width) * VW, y = ((e.clientY - r.top) / r.height) * VH;
+  if (S.name === 'online_lobby' && S.rects) {
+    for (const b of S.rects) {
+      if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
+        sfx('ui');
+        if (b.action === 'hero') onlineManager.cycleHero(1);
+        else if (b.action === 'start') onlineManager.startMatch();
+        else if (b.action === 'leave') { onlineManager.close(); openTitle(); }
+        return;
+      }
+    }
+    return;
+  }
+  if (world && world.isOnline && onlineManager.session && onlineManager.session.state === 'result') {
+    onlineManager.close();
+    openTitle();
+    return;
+  }
   if (S.name === 'cut') { const b = cut.skipRect; if (x >= b.x - 4 && x <= b.x + b.w + 4 && y <= b.y + b.h + 6) cut.skip(); else if (S.armed <= 0) cut.advance(); return; }
   if (S.name === 'credits') { if (S.armed <= 0) endCredits(); return; }
   if (S.menu && S.rects) { for (const b of S.rects) if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) { if (S.menu.sel === b.i || e.pointerType !== 'mouse') { S.menu.sel = b.i; activate(); } else S.menu.sel = b.i; return; } }
@@ -99,6 +117,20 @@ function activate() {
   sfx('ui'); it.fn();
 }
 function uiKey(code) {
+  if (S.name === 'online_lobby') {
+    if (code === 'ArrowLeft' || code === 'KeyA') { onlineManager.cycleHero(-1); sfx('ui'); }
+    else if (code === 'ArrowRight' || code === 'KeyD') { onlineManager.cycleHero(1); sfx('ui'); }
+    else if (code === 'Enter' || code === 'Space') { if (onlineManager.session?.role === 'host') onlineManager.startMatch(); }
+    else if (code === 'Escape') { onlineManager.close(); openTitle(); }
+    return;
+  }
+  if (world && world.isOnline && onlineManager.session && onlineManager.session.state === 'result') {
+    if (code === 'Enter' || code === 'Space' || code === 'Escape') {
+      onlineManager.close();
+      openTitle();
+    }
+    return;
+  }
   if (S.name === 'play') { if (code === 'Escape' || code === 'KeyP') openPause(); return; }
   if (S.name === 'cut') { if (S.armed <= 0 && ['Enter', 'Space', 'KeyJ', 'KeyZ'].includes(code)) cut.advance(); return; }
   if (S.name === 'credits') { if (S.armed <= 0 && ['Enter', 'Space', 'Escape'].includes(code)) endCredits(); return; }
@@ -127,12 +159,81 @@ function openTitle() {
   setMenu('title', { y: null, lobby: true, items: [
     { label: 'MACERA', fn: openChapters },
     { label: 'HİKÂYE', fn: openStory },
-    { label: 'KALE KAPMACA', fn: () => { location.href = 'kale/index.html'; } },
-    { label: 'ÇOK OYUNCULU', fn: () => { location.href = 'kale/index.html'; } },
+    { label: 'ÇEVRİM İÇİ', fn: openOnlineMenu },
     { label: 'DÜKKÂN', fn: () => openShop(openTitle) },
     { label: 'KONTROLLER', fn: () => openHelp(openTitle) },
     { label: 'AYARLAR', fn: () => openSettings(openTitle) },
   ] });
+}
+
+function openOnlineMenu() {
+  const build = () => {
+    const curHero = HERO_LIST[onlineManager.heroIdx];
+    setMenu('online_menu', {
+      title: 'ÇEVRİM İÇİ ARENA',
+      note: 'ARKADAŞLARINLA CANLI KAPIS (P2P WEBRTC)',
+      wide: true,
+      dim: true,
+      back: openTitle,
+      items: [
+        {
+          label: 'ODA KUR (HOST)',
+          desc: 'YENİ BİR ARENA ODASI AÇ VE KODU ARKADAŞINA VER',
+          fn: async () => {
+            sfx('power');
+            const sess = await onlineManager.host();
+            openOnlineLobby(sess);
+          },
+        },
+        {
+          label: 'ODAYA KATIL',
+          desc: 'ARKADAŞININ VERDİĞİ 5 HANELİ KODLA ODAYA GİR',
+          fn: () => {
+            const code = prompt('5 Haneli Oda Kodunu Girin:');
+            if (code) {
+              sfx('power');
+              onlineManager.join(code).then((sess) => {
+                openOnlineLobby(sess);
+              }).catch((e) => alert(e.message || 'Bağlantı hatası'));
+            }
+          },
+        },
+        {
+          label: 'KAHRAMAN: ' + curHero.name,
+          desc: curHero.desc + ' — DEĞİŞTİRMEK İÇİN BAS',
+          value: curHero.name,
+          fn: () => {
+            onlineManager.cycleHero(1);
+            sfx('power');
+            build();
+          },
+        },
+        { label: 'GERİ', fn: openTitle },
+      ],
+    });
+  };
+  build();
+}
+
+function openOnlineLobby(sess) {
+  S.name = 'online_lobby';
+  S.menu = null;
+  S.armed = 0.3;
+  document.body.dataset.state = 'online_lobby';
+  onlineManager.onStartGame = () => {
+    startOnlineMatch();
+  };
+}
+
+function startOnlineMatch() {
+  world = createWorld(createOnlineArena, save, 99, onlineManager.myHero);
+  onlineManager.bindWorld(world);
+  music('stage');
+  clearInput();
+  acc = 0;
+  count = 2.4;
+  S.name = 'count';
+  document.body.dataset.state = 'play';
 }
 function openStory() {
   const items = CHAPTERS.map((mk, i) => ({ label: (i + 1) + '. ' + (CH_TITLES[i] || 'BÖLÜM ' + (i + 1)), value: i < save.unlocked ? 'İZLE' : 'KİLİTLİ', disabled: i >= save.unlocked, fn: () => openStoryChapter(i) }));
@@ -186,6 +287,13 @@ function openHelp(back) { S.name = 'help'; S.menu = null; S.back = back; S.armed
 function openPause() {
   if (S.name !== 'play' && S.name !== 'count') return;
   const resume = () => { S.name = 'play'; S.menu = null; document.body.dataset.state = 'play'; clearInput(); last = performance.now(); if (count > 0) S.name = 'count'; };
+  if (world && world.isOnline) {
+    setMenu('pause', { title: 'DURAKLATILDI', note: 'ÇEVRİM İÇİ MAÇ DEVAM EDİYOR', dim: true, back: resume, items: [
+      { label: 'DEVAM', fn: resume },
+      { label: 'MAÇTAN AYRIL', fn: () => { onlineManager.close(); openTitle(); } },
+    ] });
+    return;
+  }
   const again = () => setMenu('pause', { title: 'DURAKLATILDI', dim: true, back: resume, items: [
     { label: 'DEVAM', fn: resume },
     { label: 'KONTROLLER', fn: () => openHelp(again) },
@@ -240,13 +348,18 @@ function onGameOver() {
 function tick() {
   readHeld();
   step(world, inp);
+  if (world && world.isOnline) {
+    onlineManager.update(DT);
+  }
   for (const k of ['jump', 'atk', 'kick', 'use', 'dash', 'spec']) if (inp[k] > 0) inp[k] -= DT;
   while (world.events.length) {
     const e = world.events.shift();
     if (e.type === 'cut') runCut(e.id, e.id === 'bugCrash' ? () => { if (G.storyAction) G.storyAction(world, 'bounceBack'); resumePlay(); } : resumePlay);
     else if (e.type === 'music') music(e.id);
     else if (e.type === 'clear') { S.name = 'clearing'; S.t = 0; }
-    else if (e.type === 'gameover') onGameOver();
+    else if (e.type === 'gameover') {
+      if (!world.isOnline) onGameOver();
+    }
   }
 }
 function frame(now) {
@@ -256,6 +369,11 @@ function frame(now) {
   if (document.hidden) return;
   S.t += dt; if (S.armed > 0) S.armed -= dt;
   const t = now / 1000;
+  if (S.name === 'online_lobby') {
+    onlineManager.update(dt);
+    S.rects = drawOnlineLobbyScreen(g, onlineManager.session, VW, VH, t);
+    return;
+  }
   if (S.name === 'play' || S.name === 'clearing') {
     acc += dt;
     let n = 0;
@@ -282,9 +400,21 @@ function frame(now) {
   else {
     render(w, g, VW, VH);
     if (world) {
-      if (S.name !== 'result') drawHUD(g, world, VW, VH, t);
-      if (count > 0 && (S.name === 'count' || S.name === 'play')) { const n = Math.ceil(count / 0.6) - 1; drawCount(g, n, (count / 0.6) % 1, VW, VH); }
-      if (S.name === 'result') drawResult(g, world, VW, VH, 2);
+      if (world.isOnline) {
+        drawOnlineMatchHUD(g, onlineManager.session, world, VW, VH, t);
+        if (onlineManager.session && onlineManager.session.state === 'result') {
+          const winName = onlineManager.session.winner || 'BERABERE';
+          g.fillStyle = 'rgba(15, 23, 42, 0.88)';
+          g.fillRect(0, 0, VW, VH);
+          text(g, 'DÖVÜŞ BİTTİ!', VW / 2, VH * 0.28, '#fde68a', 2.5, 0.5, '#07060f');
+          text(g, 'KAZANAN: ' + winName, VW / 2, VH * 0.44, '#4ade80', 1.5, 0.5, '#07060f');
+          text(g, touch.on ? 'DOKUN: LOBİYE DÖN' : 'ENTER: LOBİYE DÖN', VW / 2, VH * 0.68, '#cbd5e1', 1, 0.5);
+        }
+      } else {
+        if (S.name !== 'result') drawHUD(g, world, VW, VH, t);
+        if (count > 0 && (S.name === 'count' || S.name === 'play')) { const n = Math.ceil(count / 0.6) - 1; drawCount(g, n, (count / 0.6) % 1, VW, VH); }
+        if (S.name === 'result') drawResult(g, world, VW, VH, 2);
+      }
     }
   }
   if (S.name === 'help') drawHelp(g, VW, VH, touch.on);
@@ -298,4 +428,14 @@ buildArt();
 resize();
 openTitle();
 requestAnimationFrame(frame);
+try {
+  const qRoom = (new URLSearchParams(window.location.search).get('oda') || new URLSearchParams(window.location.search).get('room') || window.location.hash.replace('#', '')).trim();
+  if (qRoom && qRoom.length === 5) {
+    setTimeout(() => {
+      onlineManager.join(qRoom).then((sess) => {
+        openOnlineLobby(sess);
+      }).catch(() => {});
+    }, 400);
+  }
+} catch (_) {}
 if (location.hash === '#debug') window.__haven = { S, get world() { return world; }, get cut() { return cut; }, inp, get save() { return save; }, startChapter, tick, press, keys, skip: () => cut && cut.skip(), cutAdvance: () => cut && cut.advance(), runCut, startCredits, go: () => { count = 0; S.name = 'play'; }, onClear, activate, uiKey };

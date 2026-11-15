@@ -168,4 +168,31 @@ function chapter5() {
   return L;
 }
 
+export function createOnlineArena() {
+  const L = builder(38);
+  Object.assign(L, { id: 99, name: 'HAVEN ARENA', sub: 'ÇOK OYUNCULU ARENA KAPISMASI', theme: 'night', music: 'stage', start: 6 });
+  L.zones = [{ x0: 0, x1: 37, set: 'in' }];
+  L.ground(0, 37);
+  // Arena sınır duvarları
+  L.block(0, 1, 0, GR - 1);
+  L.block(36, 37, 0, GR - 1);
+  // Platformlar
+  L.plat(5, 11, 11);
+  L.plat(26, 32, 11);
+  L.plat(13, 24, 8);
+  // Zıplama trambolinleri
+  L.e('pad', 3);
+  L.e('pad', 34);
+  // Kutular (çay ve döner güçlendirmeleri)
+  L.e('crate', 8, { row: 10, drop: 'cay' });
+  L.e('crate', 29, { row: 10, drop: 'doner' });
+  // Dekoratif öğeler
+  L.p('banner', 16, { y: 3 });
+  L.p('speaker', 3);
+  L.p('speaker', 34);
+  L.p('poster', 7, { y: 6, v: 0 });
+  L.p('poster', 28, { y: 6, v: 1 });
+  return L;
+}
+
 export const CHAPTERS = [chapter1, chapter2, chapter3, chapter4, chapter5];

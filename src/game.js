@@ -34,7 +34,7 @@ const EDEF = {
 const HERO_KEYS = ['idle', 'run', 'jump', 'fall', 'dash', 'tele', 'smash', 'throw', 'hit', 'ko', 'win'];
 
 // ------------------------------------------------------------------ world
-export function createWorld(make, save, chapterIdx) {
+export function createWorld(make, save, chapterIdx, heroId = 'akin') {
   const lv = make();
   const w = {
     lv, tw: lv.w, grid: lv.grid, pxw: lv.w * TILE, t: 0, VW: 480, VH: 270,
@@ -42,6 +42,7 @@ export function createWorld(make, save, chapterIdx) {
     cam: { x: 0, y: 0, shake: 0 }, lockL: 0, lockR: lv.w * TILE, arena: null, hitstop: 0, flash: 0,
     boss: null, pads: [], cage: lv.cage !== undefined ? { x: lv.cage * TILE + 8 } : null, hint: null, hintI: 0, events: [], tokens: 0, go: 0, devinCd: 20, devin: { x: 0, y: 0 },
     stats: { stickers: 0, kos: 0, time: 0, badges: 0, maxCombo: 0 }, save, chapterIdx, over: false, cats: [],
+    remotePlayers: [], heroId: heroId || 'akin',
   };
   w.bg = background(lv.theme);
   const up = save.upg;
@@ -49,7 +50,7 @@ export function createWorld(make, save, chapterIdx) {
     x: lv.start * TILE, y: FLOOR, vx: 0, vy: 0, w: 12, h: 30, face: 1, grounded: true, jumps: 2, state: 'idle', st: 0,
     maxHp: 100 + up.hp * 20 + (save.moral ? 20 : 0), hp: 100 + up.hp * 20 + (save.moral ? 20 : 0), lives: 3, en: 0, inv: 0, combo: 0, comboT: 0, hitSet: new Set(), queue: null,
     weapon: null, cay: 0, don: 0, dashCd: 0, airDash: true, coy: 0, cut: false, landT: 0, airJumpT: 0, safeX: lv.start * TILE, safeY: FLOOR,
-    dmgMul: 1 + up.power * 0.15, kb: false, kbT: 0, pow: 0, enMul: 1 + up.energy * 0.3, spr: sprites('akin'), drop: 0, ride: null, atkId: 0,
+    dmgMul: 1 + up.power * 0.15, kb: false, kbT: 0, pow: 0, enMul: 1 + up.energy * 0.3, spr: sprites(heroId || 'akin'), drop: 0, ride: null, atkId: 0,
   };
   w.check = { x: lv.start * TILE, y: FLOOR };
   for (const m of lv.movers) w.movers.push({ bx: m.x * TILE, y: m.row * TILE, w: m.w, range: m.range, period: m.period, phase: m.phase, x: m.x * TILE, dx: 0 });
@@ -260,6 +261,16 @@ function strike(w, bx, by, bw, bh, h, set) {
   for (const e of w.enemies) {
     if (e.dead || (set && set.has(e))) continue;
     if (overlap(bx, by, bw, bh, e.x - e.w / 2, e.y - e.h, e.w, e.h)) { if (hitEnemy(w, e, h)) { n++; if (set) set.add(e); } }
+  }
+  if (w.remotePlayers && w.onHitRemote) {
+    for (const rp of w.remotePlayers) {
+      if (rp.hp <= 0 || rp.inv > 0 || (set && set.has(rp))) continue;
+      if (overlap(bx, by, bw, bh, rp.x - 7, rp.y - 30, 14, 30)) {
+        if (set) set.add(rp);
+        w.onHitRemote(rp, h);
+        n++;
+      }
+    }
   }
   for (const c of w.crates) {
     if (c.hp <= 0 || (set && set.has(c))) continue;
@@ -1025,6 +1036,30 @@ export function render(w, g, VW, VH) {
     if ((e.state === 'teleC' || e.state === 'teleL' || e.state === 'teleS' || (e.state === 'tele' && (e.t === 'knight' || e.t === 'troll' || e.t === 'spam')) || e.state === 'teleS' || e.state === 'cast' || e.state === 'slamT') && Math.floor(t * 12) % 2) text(g, '!', x, y - e.h - 18, '#ef4444', 2, 0.5, '#141021');
     if (!e.boss && !e.dead && e.hp < e.maxHp) { g.fillStyle = '#141021'; g.fillRect(Math.round(x - 9), Math.round(y - e.h - 7), 18, 4); g.fillStyle = '#ef4444'; g.fillRect(Math.round(x - 8), Math.round(y - e.h - 6), Math.max(1, Math.round((16 * e.hp) / e.maxHp)), 2); }
   }
+  // remote players (online multiplayer)
+  if (w.remotePlayers && w.remotePlayers.length) {
+    for (const rp of w.remotePlayers) {
+      if (rp.hp <= 0 && rp.state === 'ko' && rp.st > 1.4) continue;
+      if (rp.grounded) shadow(g, rp.x - cx, rp.y + oy, 9);
+      if (!(rp.inv > 0 && Math.floor(t * 24) % 2)) {
+        const fr = playerFrame(rp, t);
+        if (rp.state === 'dash') {
+          g.globalAlpha = 0.3; drawHero(g, fr, rp.x - cx - rp.face * 20, rp.y + oy, rp.face);
+          g.globalAlpha = 0.55; drawHero(g, fr, rp.x - cx - rp.face * 10, rp.y + oy, rp.face);
+          g.globalAlpha = 1;
+        }
+        drawHero(g, fr, rp.x - cx, rp.y + oy, rp.face, 1, rp.state === 'hit' && rp.st < 0.08);
+      }
+      // Name & Mini HP bar
+      const rx = Math.round(rp.x - cx), ry = Math.round(rp.y + oy - 42);
+      text(g, rp.name || (rp.hero || 'RAKIP').toUpperCase(), rx, ry, '#ffd27a', 1, 0.5, '#141021');
+      const bw = 24, bh = 3, bx = Math.round(rx - bw / 2), by = ry + 8;
+      g.fillStyle = '#141021'; g.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+      g.fillStyle = '#dc2626'; g.fillRect(bx, by, bw, bh);
+      const curHp = Math.max(0, Math.min(bw, Math.round(bw * (rp.hp / (rp.maxHp || 100)))));
+      g.fillStyle = '#22c55e'; g.fillRect(bx, by, curHp, bh);
+    }
+  }
   // player
   if (!(p.inv > 0 && p.state !== 'dash' && p.state !== 'ko' && p.state !== 'special' && Math.floor(t * 24) % 2)) {
     if (p.grounded) shadow(g, p.x - cx, p.y + oy, 9);
@@ -1033,6 +1068,10 @@ export function render(w, g, VW, VH) {
     if (p.pow > 0) { g.globalAlpha = 0.16 + Math.sin(t * 14) * 0.06; g.fillStyle = '#7cf0ff'; g.fillRect(Math.round(p.x - cx) - 12, Math.round(p.y + oy) - 38, 24, 40); g.fillRect(Math.round(p.x - cx) - 8, Math.round(p.y + oy) - 44, 16, 52); g.globalAlpha = 1; }
     drawHero(g, fr, p.x - cx, p.y + oy, p.face, 1, p.state === 'hit' && p.st < 0.08);
     if (p.weapon && p.weapon.k === 'klavye' && (p.state === 'p1' || p.state === 'p2') && p.st > 0.04 && p.st < 0.16) draw(g, SPR.klavye, 0, p.x - cx + p.face * 26, p.y + oy - 18, p.face < 0);
+  }
+  if (w.isOnline && p.hp > 0) {
+    const px = Math.round(p.x - cx), py = Math.round(p.y + oy - 42);
+    text(g, 'SEN', px, py, '#7cf0ff', 1, 0.5, '#141021');
   }
   // projectiles
   for (const s of w.shots) {
@@ -1059,4 +1098,4 @@ export function render(w, g, VW, VH) {
   if (w.go > 0 && Math.floor(t * 4) % 2) text(g, 'İLERİ >>', VW - 12, VH * 0.4, '#fde68a', 2, 1, '#141021');
   if (w.flash > 0) { g.globalAlpha = Math.min(0.8, w.flash * 2); g.fillStyle = '#ffffff'; g.fillRect(0, 0, VW, VH); g.globalAlpha = 1; }
 }
-export { ATK, EDEF, FLOOR, ANIMS };
+export { ATK, EDEF, FLOOR, ANIMS, spark, star, num, shake, playerFrame };

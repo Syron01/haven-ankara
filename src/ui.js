@@ -96,14 +96,6 @@ function lbox(g, x, y, w, h, fill, top, sel) {
   g.fillStyle = top; g.fillRect(x, yy, w, 2);
   return yy;
 }
-function drawCastle(g, x, y, s) {
-  const r = (a, b, w, h, c) => { g.fillStyle = c; g.fillRect(x + a * s, y + b * s, w * s, h * s); };
-  r(1, 5, 14, 10, '#9a93b3'); r(1, 5, 14, 1, '#d8d3ea');
-  r(0, 2, 4, 13, '#b8b2d0'); r(12, 2, 4, 13, '#b8b2d0'); r(0, 1, 1, 2, '#b8b2d0'); r(2, 1, 1, 2, '#b8b2d0'); r(12, 1, 1, 2, '#b8b2d0'); r(14, 1, 1, 2, '#b8b2d0');
-  r(5, 3, 6, 12, '#a8a2c4'); r(5, 2, 1, 1, '#a8a2c4'); r(7, 2, 2, 1, '#a8a2c4'); r(10, 2, 1, 1, '#a8a2c4');
-  r(6, 9, 4, 6, '#141021'); r(7, 7, 2, 2, '#fde68a'); r(1, 7, 2, 2, '#141021'); r(13, 7, 2, 2, '#141021');
-  r(8, -2, 1, 4, '#141021'); r(9, -2, 3, 2, '#ec3750');
-}
 function drawGear(g, x, y, s, col) {
   const u = Math.max(1, Math.floor(s / 12));
   g.fillStyle = col;
@@ -125,26 +117,33 @@ export function drawLobby(g, m, VW, VH, t) {
   text(g, 'ANKARA', VW / 2, ly + sc * 10 + 2, PAPER, sc, 0.5, INK);
   const logoB = ly + sc * 17 + 2;
   // tiles
-  const gap = Math.max(4, Math.round(u * 0.02)), ts = clamp(Math.round(u * 0.3), 46, 86), rowW = ts * 3 + gap * 2, tx = Math.round((VW - rowW) / 2), ty = VH - 14 - ts;
+  const gap = Math.max(4, Math.round(u * 0.02)), ts = clamp(Math.round(u * 0.3), 46, 86), rowW = ts * 2 + gap, tx = Math.round((VW - rowW) / 2), ty = VH - 14 - ts;
   const band = 11, spr = Math.floor((ts - band - 6) / 1);
-  const defs = [['MACERA', '#f59e0b', '#ffd27a', 'akin'], ['HİKÂYE', '#4ade80', '#bbf7d0', 'ozgur'], ['KALE KAPMACA', '#a855f7', '#d8b4fe', null]];
+  const defs = [['MACERA', '#f59e0b', '#ffd27a', 'akin'], ['HİKÂYE', '#4ade80', '#bbf7d0', 'ozgur']];
   defs.forEach(([lab, col, top, id], k) => {
     const x = tx + k * (ts + gap), s = sel === k, y = lbox(g, x, ty, ts, ts, col, top, s);
     g.fillStyle = 'rgba(20,16,33,.25)'; g.fillRect(x, y + ts - band - 6, ts, 6);
     if (id) { const f = sprites(id, ['idle']).idle; draw64(g, f[Math.floor(t * 5) % f.length], x + (ts - spr) / 2, y + 4, spr); }
-    else { const cs = Math.max(1, Math.floor((ts - band - 12) / 16)); drawCastle(g, x + Math.round((ts - 16 * cs) / 2), y + 8 + cs * 2, cs); }
     g.fillStyle = INK; g.fillRect(x, y + ts - band, ts, band);
     text(g, lab, x + ts / 2, y + ts - band + 2, s ? GOLD : PAPER, 1, 0.5);
-    if (k === 2) { const rw = textW('YENİ!') + 6; g.fillStyle = INK; g.fillRect(x - 1, y + 3, rw + 2, 11); g.fillStyle = RED; g.fillRect(x, y + 4, rw, 9); text(g, 'YENİ!', x + rw / 2, y + 5, PAPER, 1, 0.5); }
     rects.push({ x: x - 2, y: ty - 3, w: ts + 4, h: ts + 6, i: k });
   });
-  // wide purple button
+  // wide purple button (ÇEVRİM İÇİ ARENA)
   const bh = VH < 250 ? 14 : 18, wy = ty - bh - 8, ww = rowW;
-  { const s = sel === 3, y = lbox(g, tx, wy, ww, bh, '#7c3aed', '#c4b5fd', s); text(g, 'ÇOK OYUNCULU', tx + ww / 2, y + Math.round((bh - 7) / 2) + 1, s ? GOLD : PAPER, 1, 0.5, INK); rects.push({ x: tx - 2, y: wy - 3, w: ww + 4, h: bh + 6, i: 3 }); }
+  {
+    const s = sel === 2, y = lbox(g, tx, wy, ww, bh, '#7c3aed', '#c4b5fd', s);
+    text(g, 'ÇEVRİM İÇİ ARENA', tx + ww / 2, y + Math.round((bh - 7) / 2) + 1, s ? GOLD : PAPER, 1, 0.5, INK);
+    // Küçük yeşil "CANLI" rozeti
+    const rw = textW('CANLI') + 6;
+    g.fillStyle = INK; g.fillRect(tx + ww - rw - 3, wy + 2, rw + 2, 11);
+    g.fillStyle = '#22c55e'; g.fillRect(tx + ww - rw - 2, wy + 3, rw, 9);
+    text(g, 'CANLI', tx + ww - rw / 2 - 2, wy + 4, PAPER, 1, 0.5);
+    rects.push({ x: tx - 2, y: wy - 3, w: ww + 4, h: bh + 6, i: 2 });
+  }
   // left stack
   const lw = VW < 300 ? 62 : 84, lbh = VH < 250 ? 13 : 17, lx = 6;
   let ly2 = logoB + 4;
-  [[4, 'DÜKKÂN', '#0ea5e9', '#7dd3fc'], [5, 'KONTROLLER', '#475569', '#94a3b8']].forEach(([i, lab, c, tp]) => {
+  [[3, 'DÜKKÂN', '#0ea5e9', '#7dd3fc'], [4, 'KONTROLLER', '#475569', '#94a3b8']].forEach(([i, lab, c, tp]) => {
     if (ly2 + lbh > wy - 2) return;
     const s = sel === i, y = lbox(g, lx, ly2, lw, lbh, c, tp, s); text(g, lab, lx + lw / 2, y + Math.round((lbh - 7) / 2) + 1, s ? GOLD : PAPER, 1, 0.5, INK);
     rects.push({ x: lx - 2, y: ly2 - 3, w: lw + 4, h: lbh + 6, i }); ly2 += lbh + 6;
@@ -155,9 +154,9 @@ export function drawLobby(g, m, VW, VH, t) {
   draw(g, SPR.sticker, Math.floor(t * 6) % 4, VW - bw + 2, 15);
   text(g, num, VW - 8, 8, GOLD, 1, 1);
   // gear
-  const gs = clamp(Math.round(u * 0.09), 20, 30), gx = VW - gs - 6, gy = VH - gs - 4, gsel = sel === 6, yy = lbox(g, gx, gy, gs, gs, '#6d28d9', '#c4b5fd', gsel);
+  const gs = clamp(Math.round(u * 0.09), 20, 30), gx = VW - gs - 6, gy = VH - gs - 4, gsel = sel === 5, yy = lbox(g, gx, gy, gs, gs, '#6d28d9', '#c4b5fd', gsel);
   drawGear(g, gx + Math.round((gs - Math.floor(gs * 0.6 / 12) * 12) / 2) + 0, yy + Math.round((gs - Math.floor(gs * 0.6 / 12) * 12) / 2), Math.floor(gs * 0.6), gsel ? GOLD : PAPER);
-  rects.push({ x: gx - 2, y: gy - 3, w: gs + 4, h: gs + 6, i: 6 });
+  rects.push({ x: gx - 2, y: gy - 3, w: gs + 4, h: gs + 6, i: 5 });
   text(g, 'CODE JAM TEMASI: BOUNCE BACK', VW / 2, VH - 9, '#a9bdd8', 1, 0.5, INK);
   return rects;
 }
