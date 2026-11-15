@@ -88,7 +88,7 @@ const CREDITS = [['HAVEN ANKARA', 3, GOLD], ['ÇAY, DÖNER VE CODE JAM', 1, PAPE
 // returns true once the last line has settled, so the caller can show the exit hint
 export function drawCredits(g, t, VW, VH) {
   g.fillStyle = '#0b0916'; g.fillRect(0, 0, VW, VH);
-  for (let i = 0; i < 40; i++) { g.fillStyle = (i + Math.floor(t * 2)) % 5 ? '#3b3050' : PAPER; g.fillRect((i * 97 + 13) % VW, (i * 53 + 7) % VH, 1, 1); }
+  for (let i = 0; i < 40; i++) { g.fillStyle = (i + Math.floor(t * 2)) % 5 ? '#3b3050' : PAPER; g.fillRect((i * i * 37 + i * 91 + 13) % VW, (i * i * 29 + i * 53 + 7) % VH, 1, 1); }
   const hs = CREDITS.map((c) => (c.length ? c[1] * 10 + 8 : 12)), total = hs.reduce((a, b) => a + b, 0), last = hs[hs.length - 1];
   const off = Math.min(t * 26, VH / 2 + 10 + total - last);
   let y = VH + 10 - off;

@@ -22,7 +22,7 @@ export function createCut(w, id, VW, VH) {
   const A = a ? a.x0 * TILE : id.startsWith('intro') ? w.lv.start * TILE : p.x;
   const anc = { P: a && !boss ? A + 76 : p.x, B: boss ? boss.x : a ? Math.max(a.x1 * TILE, A + VW) - 70 : A + 200 };
   // the world is paused: real actors are stashed off-stage and drawn as cutscene actors instead
-  const st = { px: p.x, dx: w.devin.x, npcs: w.npcs, enemies: w.enemies, shots: w.shots, hint: w.hint, go: w.go };
+  const st = { px: p.x, dx: w.devin.x, npcs: w.npcs, enemies: w.enemies, shots: w.shots, go: w.go };
   const npcX = {}; for (const n of st.npcs) npcX[n.id] = n.x;
   p.x = w.devin.x = -999; w.npcs = []; w.enemies = []; w.shots = []; w.hint = null; w.go = 0;
   const ac = {}, tws = [], view = { x: w.camInit ? w.cam.x + VW / 2 : anc.P, z: 1, fade: 0, f: null };
@@ -98,7 +98,7 @@ export function createCut(w, id, VW, VH) {
   }
   function finish() {
     c.done = true;
-    p.x = st.px; w.devin.x = st.dx; w.npcs = st.npcs; w.enemies = st.enemies; w.shots = st.shots; w.hint = st.hint; w.go = st.go;
+    p.x = st.px; w.devin.x = st.dx; w.npcs = st.npcs; w.enemies = st.enemies; w.shots = st.shots; w.go = st.go;
   }
   function advance() {
     if (bub) { if (bub.n < bub.text.length) bub.n = bub.text.length; else if (bub.age > 0.12) bub = null; }
@@ -218,7 +218,7 @@ export function createCut(w, id, VW, VH) {
     }
     if (bossC) {
       const t = bossC.t, a = clamp(Math.min(t / 0.2, (3.3 - t) / 0.4), 0, 1), s1 = (1 - ease(clamp(t / 0.35, 0, 1))) * VW0, s2 = (1 - ease(clamp((t - 0.25) / 0.35, 0, 1))) * VW0;
-      const y = Math.round(BH + (VH0 - 2 * BH) * 0.55), sc = textW(bossC.name, 3) <= VW0 - 16 ? 3 : 2;
+      const y = Math.round(BH + 12), sc = textW(bossC.name, 3) <= VW0 - 16 ? 3 : 2;
       g.fillStyle = 'rgba(11,9,22,' + 0.5 * a + ')'; g.fillRect(0, 0, VW0, VH0);
       g.fillStyle = INK; g.fillRect(0, y - 4, VW0, sc * 10 + 28); g.fillStyle = RED; g.fillRect(0, y - 4, VW0, 2); g.fillRect(0, y + sc * 10 + 22, VW0, 2);
       text(g, bossC.name, VW0 / 2 + s1, y + 2, PAPER, sc, 0.5, RED);
