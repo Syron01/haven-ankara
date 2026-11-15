@@ -17,6 +17,10 @@
   .tb.on { background: rgba(236, 55, 80, 0.55); border-color: #fff7ed; }
   .tb.sm { width: 11.5vmin; height: 11.5vmin; min-width: 38px; min-height: 38px; font-size: 4vmin; }
   #pauseBtn { top: max(6px, env(safe-area-inset-top)); left: 50%; margin-left: -18px; width: 36px; height: 36px; min-width: 0; min-height: 0; font-size: 14px; letter-spacing: 2px; }
+  #splash { position: fixed; inset: 0; z-index: 10; background: #000; display: flex; align-items: center; justify-content: center; animation: splashIn 0.6s ease-out; transition: opacity 0.45s; }
+  #splash img { width: min(100vw, 177.8vh); height: auto; image-rendering: pixelated; }
+  #splash.out { opacity: 0; pointer-events: none; }
+  @keyframes splashIn { from { opacity: 0; } }
 </style>
 </head>
 <body data-state="title">
@@ -33,6 +37,18 @@
   <div class="tb sm" data-p="spec" style="right: 19vmin; bottom: 42vmin;">&#9733;</div>
 </div>
 <div class="tb" id="pauseBtn">II</div>
+<div id="splash"><img src="assets/acilis.jpg" alt="Devirin" /></div>
+<script>
+  // opening card: fades in, holds, fades out; any key or tap skips without reaching the game
+  (() => {
+    const s = document.getElementById('splash');
+    const close = () => { if (s.classList.contains('out')) return; s.classList.add('out'); setTimeout(() => s.remove(), 450); removeEventListener('keydown', eat, true); };
+    const eat = (e) => { e.stopPropagation(); e.preventDefault(); close(); };
+    addEventListener('keydown', eat, true);
+    s.addEventListener('pointerdown', (e) => { e.stopPropagation(); close(); });
+    setTimeout(close, 3200);
+  })();
+</script>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
