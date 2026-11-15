@@ -96,52 +96,111 @@ function lbox(g, x, y, w, h, fill, top, sel) {
   g.fillStyle = top; g.fillRect(x, yy, w, 2);
   return yy;
 }
-// ---- Dan the Man style UI helpers
-function drawDanLogo(g, cx, cy, sc, t) {
-  // 3D Chunky HAVEN
-  const ly = cy;
-  // Black drop shadow
-  text(g, 'HAVEN', cx + 2, ly + 3, '#07060f', sc, 0.5);
-  // Red/terracotta 3D extrusion
-  text(g, 'HAVEN', cx + 1, ly + 2, '#851a08', sc, 0.5);
-  text(g, 'HAVEN', cx + 1, ly + 1, '#b91c1c', sc, 0.5);
-  // Warm orange base
-  text(g, 'HAVEN', cx, ly, '#ea580c', sc, 0.5);
-  // Bright golden top half
+
+function drawGear(g, x, y, s, col) {
+  const u = Math.max(1, Math.floor(s / 12));
+  g.fillStyle = col;
+  const R = (a, b, w, h) => g.fillRect(x + a * u, y + b * u, w * u, h * u);
+  R(5, 0, 2, 12); R(0, 5, 12, 2); R(1, 1, 2, 2); R(9, 1, 2, 2); R(1, 9, 2, 2); R(9, 9, 2, 2); R(2, 2, 8, 8);
+  g.fillStyle = '#1e293b'; R(4, 4, 4, 4); g.fillStyle = col; R(5, 5, 2, 2);
+}
+
+// 3D Chunky Beveled Cartoon Text (Dan the Man ekolu)
+function drawChunky3DText(g, str, x, y, sc, align = 0.5) {
+  const tw = textW(str, sc);
+  const leftX = align === 0.5 ? Math.round(x - tw / 2) : (align === 1 ? Math.round(x - tw) : Math.round(x));
+  // 1. Thick cartoon outline / drop shadow
+  for (let dx = -2; dx <= 2; dx++) {
+    for (let dy = -2; dy <= 4; dy++) {
+      if (Math.abs(dx) === 2 || dy >= 2) {
+        text(g, str, x + dx, y + dy, '#07060f', sc, align);
+      }
+    }
+  }
+  // 2. Deep crimson bottom bevel
+  text(g, str, x, y + 2, '#7f1d1d', sc, align);
+  text(g, str, x, y + 1, '#991b1b', sc, align);
+  // 3. Fiery orange body
+  text(g, str, x, y, '#ea580c', sc, align);
+  // 4. Sunny golden upper half
   g.save();
   g.beginPath();
-  g.rect(0, 0, 9999, ly + sc * 5);
+  const h = sc * 9;
+  g.rect(leftX - 6, y - 4, tw + 12, Math.round(h * 0.52));
   g.clip();
-  text(g, 'HAVEN', cx, ly, '#fde047', sc, 0.5);
+  text(g, str, x, y, '#fde047', sc, align);
+  // 5. White gloss highlight on very top edge
+  g.beginPath();
+  g.rect(leftX - 6, y - 4, tw + 12, Math.round(h * 0.22));
+  g.clip();
+  text(g, str, x, y, '#fef9c3', sc, align);
   g.restore();
+}
 
-  // Spinning ninja star / sticker on top-left of HAVEN
-  const starFr = Math.floor(t * 6) % 4;
-  const starX = cx - Math.round(textW('HAVEN', sc) * 0.5) - 14;
-  draw(g, SPR.sticker, starFr, starX, ly + 2, false);
+function drawNinjaStar(g, x, y, t) {
+  const ang = (t * 6) % (Math.PI * 2);
+  g.save();
+  g.translate(x, y);
+  g.rotate(ang);
+  // Outer black border
+  g.fillStyle = '#07060f';
+  g.beginPath();
+  g.moveTo(0, -9); g.lineTo(3, -3);
+  g.lineTo(9, 0); g.lineTo(3, 3);
+  g.lineTo(0, 9); g.lineTo(-3, 3);
+  g.lineTo(-9, 0); g.lineTo(-3, -3);
+  g.closePath();
+  g.fill();
+  // White metallic blade body
+  g.fillStyle = '#f8fafc';
+  g.beginPath();
+  g.moveTo(0, -7); g.lineTo(2, -2);
+  g.lineTo(7, 0); g.lineTo(2, 2);
+  g.lineTo(0, 7); g.lineTo(-2, 2);
+  g.lineTo(-7, 0); g.lineTo(-2, -2);
+  g.closePath();
+  g.fill();
+  // Center ring
+  g.fillStyle = '#94a3b8'; g.fillRect(-2, -2, 4, 4);
+  g.fillStyle = '#07060f'; g.fillRect(-1, -1, 2, 2);
+  g.restore();
+}
 
-  // ANKARA pill banner below
-  const ay = ly + sc * 10 + 2;
-  const aw = textW('ANKARA', sc > 2 ? 2 : 1) + 20, ah = sc > 2 ? 14 : 11;
-  const ax = Math.round(cx - aw / 2);
-  // Banner border and shadow
-  g.fillStyle = '#07060f'; g.fillRect(ax - 2, ay - 1, aw + 4, ah + 3);
-  g.fillStyle = '#1e1b4b'; g.fillRect(ax, ay, aw, ah);
-  g.fillStyle = '#facc15'; g.fillRect(ax + 1, ay + 1, aw - 2, 1);
-  text(g, 'ANKARA', cx, ay + (sc > 2 ? 3 : 2), '#fff7ed', sc > 2 ? 2 : 1, 0.5, '#07060f');
+function drawDanLogo(g, cx, cy, sc, t) {
+  const ly = cy + 2;
+  const gap = 12;
+  const wHaven = textW('HAVEN', sc);
+  const wAnkara = textW('ANKARA', sc);
+  const totalW = wHaven + gap + wAnkara;
+  const leftX = cx - Math.round(totalW / 2);
 
-  // Small CLASSIC / CODE JAM badge
-  const cjw = textW('CODE JAM') + 8;
-  g.fillStyle = '#07060f'; g.fillRect(Math.round(cx - cjw / 2) - 1, ay + ah + 1, cjw + 2, 9);
-  g.fillStyle = '#15803d'; g.fillRect(Math.round(cx - cjw / 2), ay + ah + 2, cjw, 7);
-  text(g, 'CODE JAM', cx, ay + ah + 3, '#a7f3d0', 1, 0.5);
+  // Spinning ninja star to the left of HAVEN
+  const starX = leftX - 16;
+  const starY = ly + Math.round((sc * 8) / 2);
+  drawNinjaStar(g, starX, starY, t);
 
-  return ay + ah + 12;
+  // HAVEN in 3D chunky golden cartoon letters
+  drawChunky3DText(g, 'HAVEN', leftX + Math.round(wHaven / 2), ly, sc, 0.5);
+
+  // ANKARA in matching 3D chunky golden cartoon letters
+  const ankaraX = leftX + wHaven + gap + Math.round(wAnkara / 2);
+  drawChunky3DText(g, 'ANKARA', ankaraX, ly, sc, 0.5);
+
+  // Dan the Man "CLASSIC" style pill ribbon under ANKARA
+  const badgeW = 66, badgeH = 12;
+  const badgeX = leftX + wHaven + gap + Math.round((wAnkara - badgeW) / 2);
+  const badgeY = ly + sc * 8 + 3;
+  g.fillStyle = '#07060f'; g.fillRect(badgeX - 2, badgeY - 1, badgeW + 4, badgeH + 3);
+  g.fillStyle = '#0f172a'; g.fillRect(badgeX, badgeY, badgeW, badgeH);
+  g.fillStyle = '#22c55e'; g.fillRect(badgeX + 2, badgeY + 1, badgeW - 4, 1);
+  text(g, 'CODE JAM', badgeX + badgeW / 2, badgeY + 2, '#4ade80', 1, 0.5);
+
+  return badgeY + badgeH + 6;
 }
 
 function drawMiniArcade(g, x, y) {
-  // Mini retro arcade cabinet (14x20)
-  g.fillStyle = '#07060f'; g.fillRect(x - 1, y - 1, 16, 22);
+  // Mini retro arcade cabinet (16x22)
+  g.fillStyle = '#07060f'; g.fillRect(x - 2, y - 2, 18, 24);
   g.fillStyle = '#4c1d95'; g.fillRect(x, y, 14, 20); // cabinet body
   g.fillStyle = '#6d28d9'; g.fillRect(x + 1, y + 1, 12, 3); // marquee
   g.fillStyle = '#fde047'; g.fillRect(x + 3, y + 2, 8, 1); // marquee text
@@ -155,12 +214,21 @@ function drawMiniArcade(g, x, y) {
 }
 
 function drawMiniIsland(g, x, y, w) {
-  // Lush green grass ledge (w x 12)
-  g.fillStyle = '#07060f'; g.fillRect(x - 2, y, w + 4, 10);
-  g.fillStyle = '#15803d'; g.fillRect(x, y + 1, w, 3); // grass top
-  g.fillStyle = '#22c55e'; g.fillRect(x, y + 1, w, 1); // grass highlight
-  g.fillStyle = '#78350f'; g.fillRect(x, y + 4, w, 5); // dirt base
-  g.fillStyle = '#92400e'; g.fillRect(x + 2, y + 5, w - 4, 2);
+  // Lush green floating grass ledge with 3D depth and mini palm tree
+  g.fillStyle = '#07060f'; g.fillRect(x - 2, y, w + 4, 12);
+  g.fillStyle = '#15803d'; g.fillRect(x, y + 1, w, 4); // grass top
+  g.fillStyle = '#4ade80'; g.fillRect(x, y + 1, w, 1); // grass highlight
+  g.fillStyle = '#78350f'; g.fillRect(x, y + 5, w, 6); // dirt base
+  g.fillStyle = '#92400e'; g.fillRect(x + 2, y + 6, w - 4, 2); // rock texture
+  // Mini palm tree on the left of the island
+  const px = x + 3, py = y - 16;
+  g.fillStyle = '#78350f';
+  g.fillRect(px + 3, py + 10, 3, 7);
+  g.fillRect(px + 4, py + 5, 3, 6);
+  g.fillStyle = '#15803d';
+  g.fillRect(px - 1, py + 2, 13, 4);
+  g.fillStyle = '#22c55e';
+  g.fillRect(px + 1, py, 9, 3);
 }
 
 export function drawLobby(g, m, VW, VH, t) {
@@ -175,10 +243,10 @@ export function drawLobby(g, m, VW, VH, t) {
   g.fillRect(0, 0, VW, VH);
 
   // Soft horizontal stage light stripe behind cards
-  const yStage = Math.round(VH * 0.5);
+  const yStage = Math.round(VH * 0.52);
   g.fillStyle = 'rgba(255, 255, 255, 0.05)';
   g.fillRect(0, yStage - 2, VW, 4);
-  g.fillStyle = 'rgba(129, 140, 248, 0.07)';
+  g.fillStyle = 'rgba(129, 140, 248, 0.08)';
   g.fillRect(0, yStage, VW, VH - yStage);
 
   // Animated subtle floating pattern (Devin heads, code brackets, pixel stars)
@@ -192,19 +260,19 @@ export function drawLobby(g, m, VW, VH, t) {
   }
   g.globalAlpha = 1;
 
-  // 2. Top-Center Dan the Man 3D Logo
+  // 2. Top-Center Dan the Man 3D Logo (HAVEN ANKARA with Shuriken)
   const sc = VH < 240 ? 2 : 3;
   const logoTop = VH < 240 ? 4 : 8;
   const logoBottom = drawDanLogo(g, VW / 2, logoTop, sc, t);
 
-  // 3. Top-Right: Gold Sticker Capsule Pill Counter (Dan the Man style)
+  // 3. Top-Right: Gold Sticker Capsule Pill Counter (Dan the Man coin counter)
   const num = String(m.stickers || 0).padStart(4, '0');
   const pillW = 82, pillH = 18, pillX = VW - pillW - 8, pillY = 6;
   g.fillStyle = '#07060f'; g.fillRect(pillX - 2, pillY - 1, pillW + 4, pillH + 2);
   g.fillStyle = '#1e1b4b'; g.fillRect(pillX, pillY, pillW, pillH);
   g.fillStyle = '#facc15'; g.fillRect(pillX + 1, pillY + 1, pillW - 2, 1);
   // Gold sticker icon
-  draw(g, SPR.sticker, Math.floor(t * 6) % 4, pillX + 2, pillY + 16, false);
+  if (SPR.sticker) draw(g, SPR.sticker, Math.floor(t * 6) % 4, pillX + 2, pillY + 16, false);
   // Number
   text(g, num, pillX + 38, pillY + 5, '#fde047', 1.2, 0.5, '#07060f');
   // Plus (+) button
@@ -213,21 +281,23 @@ export function drawLobby(g, m, VW, VH, t) {
   g.fillStyle = '#ea580c'; g.fillRect(pillX + pillW - 16, pillY + 13, 13, 2);
   text(g, '+', pillX + pillW - 10, pillY + 5, '#ffffff', 1.2, 0.5, '#07060f');
 
-  // 4. Top-Left: Hero Avatar Button (Dan the Man "CHARACTERS" style)
+  // 4. Top-Left: Hero Avatar Button (Dan the Man "CHARACTERS" button)
   const heroBtnW = 34, heroBtnH = 34, heroBtnX = 8, heroBtnY = 6;
   g.fillStyle = '#07060f'; g.fillRect(heroBtnX - 2, heroBtnY - 2, heroBtnW + 4, heroBtnH + 4);
   g.fillStyle = '#1e3a8a'; g.fillRect(heroBtnX, heroBtnY, heroBtnW, heroBtnH);
   g.fillStyle = '#60a5fa'; g.fillRect(heroBtnX + 1, heroBtnY + 1, heroBtnW - 2, 1);
-  // Mini hero face
-  const akinIdle = sprites('akin', ['idle']).idle;
-  const hfr = akinIdle[Math.floor(t * 5) % akinIdle.length];
-  g.drawImage(hfr, 16, 8, 32, 32, heroBtnX + 1, heroBtnY + 1, 32, 32);
-  // Label below
+  // Hero portrait
+  try {
+    const akinIdle = sprites('akin', ['idle']).idle;
+    const hfr = akinIdle[Math.floor(t * 5) % akinIdle.length];
+    if (hfr) g.drawImage(hfr, 16, 8, 32, 32, heroBtnX + 1, heroBtnY + 1, 32, 32);
+  } catch(e) {}
+  // Label pill below
   g.fillStyle = '#07060f'; g.fillRect(heroBtnX - 3, heroBtnY + heroBtnH - 7, heroBtnW + 6, 9);
   g.fillStyle = '#3b82f6'; g.fillRect(heroBtnX - 2, heroBtnY + heroBtnH - 6, heroBtnW + 4, 7);
   text(g, 'KAHRAMAN', heroBtnX + heroBtnW / 2, heroBtnY + heroBtnH - 5, '#ffffff', 0.8, 0.5);
 
-  // 5. Right-Side Stack: DÜKKÂN (3) and KONTROLLER (4)
+  // 5. Right-Side Stack: DUKKAN (3) and KONTROL (4)
   const rBtnW = 38, rBtnH = 36, rBtnX = VW - rBtnW - 8;
   let ry = logoBottom + 4;
   [
@@ -245,7 +315,7 @@ export function drawLobby(g, m, VW, VH, t) {
 
     // Icon
     if (icon === 'shop') {
-      // Golden prize cup / medal
+      // Golden prize trophy
       g.fillStyle = '#fde047';
       g.fillRect(rBtnX + 13, byy + 6, 12, 10);
       g.fillRect(rBtnX + 11, byy + 7, 2, 5);
@@ -253,14 +323,14 @@ export function drawLobby(g, m, VW, VH, t) {
       g.fillStyle = '#ca8a04'; g.fillRect(rBtnX + 17, byy + 16, 4, 3);
       g.fillRect(rBtnX + 14, byy + 19, 10, 2);
     } else {
-      // Gamepad icon
+      // Gamepad controller
       g.fillStyle = '#94a3b8'; g.fillRect(rBtnX + 10, byy + 9, 18, 10);
       g.fillStyle = '#07060f';
-      g.fillRect(rBtnX + 13, byy + 12, 5, 2); g.fillRect(rBtnX + 15, byy + 10, 2, 5); // dpad
-      g.fillStyle = '#ef4444'; g.fillRect(rBtnX + 22, byy + 11, 2, 2); // btn a
-      g.fillStyle = '#facc15'; g.fillRect(rBtnX + 24, byy + 14, 2, 2); // btn b
+      g.fillRect(rBtnX + 13, byy + 12, 5, 2); g.fillRect(rBtnX + 15, byy + 10, 2, 5);
+      g.fillStyle = '#ef4444'; g.fillRect(rBtnX + 22, byy + 11, 2, 2);
+      g.fillStyle = '#facc15'; g.fillRect(rBtnX + 24, byy + 14, 2, 2);
     }
-    // Label
+    // Label pill
     g.fillStyle = '#07060f'; g.fillRect(rBtnX - 3, byy + rBtnH - 8, rBtnW + 6, 10);
     g.fillStyle = isSel ? '#2563eb' : '#1e3a8a'; g.fillRect(rBtnX - 2, byy + rBtnH - 7, rBtnW + 4, 8);
     text(g, lab, rBtnX + rBtnW / 2, byy + rBtnH - 6, isSel ? GOLD : PAPER, 0.8, 0.5);
@@ -283,22 +353,22 @@ export function drawLobby(g, m, VW, VH, t) {
 
   // -------------------------------------------------------------
   // 7. CENTERPIECE: DAN THE MAN 3-CARD DIORAMA CAROUSEL!
-  // Left: MACERA (0) | Center Diamond: HİKÂYE (1) | Right: ÇEVRİM İÇİ (2)
+  // Left: MACERA (0) | Center Diamond: HIKAYE (1) | Right: CEVRIM ICI (2)
   // -------------------------------------------------------------
   const cardW = clamp(Math.round(u * 0.38), 64, 94);
-  const cardH = clamp(Math.round(u * 0.44), 72, 106);
-  const diaSize = Math.round(cardW * 1.18); // Elevated center diamond
-  const gap = Math.max(8, Math.round(u * 0.03));
+  const cardH = clamp(Math.round(u * 0.42), 72, 108);
+  const diaSize = Math.round(cardW * 1.16); // Elevated center diamond
+  const gap = Math.max(10, Math.round(u * 0.035));
   const cx = Math.round(VW / 2);
   const totalW = cardW + gap + diaSize + gap + cardW;
   const baseX = Math.round(cx - totalW / 2);
-  const cyCards = Math.round(VH * 0.64);
+  const cyCards = Math.round(VH * 0.63);
 
   // ---- (0) LEFT CARD: MACERA (ADVENTURE)
   {
     const isSel = sel === 0;
     const cw = cardW, ch = cardH;
-    const x = baseX, y = isSel ? cyCards - Math.round(ch / 2) - 3 : cyCards - Math.round(ch / 2);
+    const x = baseX, y = isSel ? cyCards - Math.round(ch / 2) - 4 : cyCards - Math.round(ch / 2);
 
     // Golden halo when selected
     if (isSel) {
@@ -315,16 +385,18 @@ export function drawLobby(g, m, VW, VH, t) {
     g.fillStyle = '#312e81';
     g.fillRect(x, y, cw, 16);
 
-    // Mini Island & Akın Hero Diorama
-    const islY = y + ch - 22;
+    // Floating Island & Akin Hero Diorama
+    const islY = y + ch - 24;
     drawMiniIsland(g, x + 6, islY, cw - 12);
-    // Akın sprite bobbing proudly
-    const akinSpr = sprites('akin', ['idle']).idle;
-    const fr = akinSpr[Math.floor(t * 5) % akinSpr.length];
-    const sprSize = Math.min(52, cw - 8);
-    draw64(g, fr, x + (cw - sprSize) / 2, islY - sprSize + 8, sprSize);
+    // Akin sprite bobbing proudly
+    try {
+      const akinSpr = sprites('akin', ['idle']).idle;
+      const fr = akinSpr[Math.floor(t * 5) % akinSpr.length];
+      const sprSize = Math.min(50, cw - 8);
+      if (fr) draw64(g, fr, x + (cw - sprSize) / 2 + 6, islY - sprSize + 8, sprSize);
+    } catch(e) {}
 
-    // Bottom Plaque: MACERA
+    // Bottom 3D Rounded Plaque: MACERA
     const py = y + ch - 6;
     g.fillStyle = '#07060f'; g.fillRect(x - 1, py - 1, cw + 2, 16);
     g.fillStyle = isSel ? '#fbbf24' : '#f59e0b'; g.fillRect(x, py, cw, 14);
@@ -334,7 +406,7 @@ export function drawLobby(g, m, VW, VH, t) {
     rects.push({ x: x - 2, y: y - 2, w: cw + 4, h: ch + 14, i: 0 });
   }
 
-  // ---- (1) CENTER CARD: HİKÂYE (STORY) — THE DAN THE MAN DIAMOND!
+  // ---- (1) CENTER CARD: HIKAYE (STORY) - THE DAN THE MAN DIAMOND!
   {
     const isSel = sel === 1;
     const dw = diaSize, dh = diaSize;
@@ -383,7 +455,7 @@ export function drawLobby(g, m, VW, VH, t) {
     g.fill();
     g.clip();
 
-    // Diamond border highlight
+    // Diamond metallic border highlight
     g.strokeStyle = isSel ? '#60a5fa' : '#2563eb';
     g.lineWidth = 4;
     g.stroke();
@@ -396,30 +468,36 @@ export function drawLobby(g, m, VW, VH, t) {
 
     // --- The Trio of Heroes Diorama inside Diamond!
     const baseHeroY = y + dh - 12;
-    const heroSize = Math.min(48, Math.round(dw * 0.48));
+    const heroSize = Math.min(46, Math.round(dw * 0.46));
 
     // Left: Tuna
-    const tunaIdle = sprites('tuna', ['idle']).idle;
-    const tFr = tunaIdle[Math.floor(t * 5 + 1) % tunaIdle.length];
-    draw64(g, tFr, cx - dw * 0.36, baseHeroY - heroSize + 2, heroSize - 4);
+    try {
+      const tunaIdle = sprites('tuna', ['idle']).idle;
+      const tFr = tunaIdle[Math.floor(t * 5 + 1) % tunaIdle.length];
+      if (tFr) draw64(g, tFr, cx - dw * 0.36, baseHeroY - heroSize + 2, heroSize - 4);
+    } catch(e) {}
 
     // Right: Mert
-    const mertIdle = sprites('mert', ['idle']).idle;
-    const mFr = mertIdle[Math.floor(t * 5 + 2) % mertIdle.length];
-    draw64(g, mFr, cx + dw * 0.05, baseHeroY - heroSize + 2, heroSize - 4);
+    try {
+      const mertIdle = sprites('mert', ['idle']).idle;
+      const mFr = mertIdle[Math.floor(t * 5 + 2) % mertIdle.length];
+      if (mFr) draw64(g, mFr, cx + dw * 0.05, baseHeroY - heroSize + 2, heroSize - 4);
+    } catch(e) {}
 
-    // Center Front: Özgür with his Royal Crown!
-    const ozgIdle = sprites('ozgur', ['idle']).idle;
-    const oFr = ozgIdle[Math.floor(t * 5) % ozgIdle.length];
-    draw64(g, oFr, cx - heroSize / 2, baseHeroY - heroSize - 2, heroSize + 4);
+    // Center Front: Ozgur with his Royal Crown!
+    try {
+      const ozgIdle = sprites('ozgur', ['idle']).idle;
+      const oFr = ozgIdle[Math.floor(t * 5) % ozgIdle.length];
+      if (oFr) draw64(g, oFr, cx - heroSize / 2, baseHeroY - heroSize - 2, heroSize + 4);
+    } catch(e) {}
 
     // Devin mascot peeking from the top
-    draw(g, SPR.devin, Math.floor(t * 4) % 4, cx - 10, y + 22, false);
+    if (SPR.devin) draw(g, SPR.devin, Math.floor(t * 4) % 4, cx - 10, y + 22, false);
 
     g.restore();
 
-    // --- Vibrant Green Ribbon / Pendant Under Diamond: HİKÂYE
-    const ribW = Math.round(dw * 0.82), ribH = 18;
+    // --- Vibrant Green Ribbon / Pendant Under Diamond: HIKAYE
+    const ribW = Math.round(dw * 0.84), ribH = 18;
     const ribX = Math.round(cx - ribW / 2), ribY = y + dh - 10;
     // Ribbon shadow & border
     g.fillStyle = '#07060f';
@@ -433,7 +511,7 @@ export function drawLobby(g, m, VW, VH, t) {
     g.fillStyle = isSel ? '#4ade80' : '#22c55e';
     g.beginPath();
     g.moveTo(ribX, ribY);
-    g.lineTo(ribX + ribW, ribY);
+    g.lineTo(ribX + ribW);
     g.lineTo(cx, ribY + ribH + 2);
     g.closePath();
     g.fill();
@@ -445,12 +523,12 @@ export function drawLobby(g, m, VW, VH, t) {
     rects.push({ x: cx - dw / 2 - 4, y: y - 4, w: dw + 8, h: dh + 18, i: 1 });
   }
 
-  // ---- (2) RIGHT CARD: ÇEVRİM İÇİ (ONLINE / SURVIVAL)
+  // ---- (2) RIGHT CARD: CEVRIM ICI (ONLINE / SURVIVAL)
   {
     const isSel = sel === 2;
     const cw = cardW, ch = cardH;
     const x = baseX + cardW + gap + diaSize + gap;
-    const y = isSel ? cyCards - Math.round(ch / 2) - 3 : cyCards - Math.round(ch / 2);
+    const y = isSel ? cyCards - Math.round(ch / 2) - 4 : cyCards - Math.round(ch / 2);
 
     // Golden halo when selected
     if (isSel) {
@@ -467,15 +545,17 @@ export function drawLobby(g, m, VW, VH, t) {
     g.fillStyle = '#4c1d95';
     g.fillRect(x, y, cw, 16);
 
-    // Cyber battle diorama: Mini Arcade Cabinet & Gökoz fighter
+    // Cyber battle diorama: Mini Arcade Cabinet & Gokoz fighter
     const botY = y + ch - 12;
     drawMiniArcade(g, x + 6, botY - 20);
 
-    // Gökoz sprite ready for battle
-    const gokozSpr = sprites('gokoz', ['idle']).idle;
-    const fr = gokozSpr[Math.floor(t * 5) % gokozSpr.length];
-    const sprSize = Math.min(52, cw - 8);
-    draw64(g, fr, x + cw - sprSize + 2, botY - sprSize + 6, sprSize);
+    // Gokoz sprite ready for battle
+    try {
+      const gokozSpr = sprites('gokoz', ['idle']).idle;
+      const fr = gokozSpr[Math.floor(t * 5) % gokozSpr.length];
+      const sprSize = Math.min(50, cw - 8);
+      if (fr) draw64(g, fr, x + cw - sprSize + 2, botY - sprSize + 6, sprSize);
+    } catch(e) {}
 
     // Neon glowing CANLI / PVP badge on top-right
     const badgeW = 28, badgeH = 10;
@@ -488,7 +568,7 @@ export function drawLobby(g, m, VW, VH, t) {
     }
     text(g, 'CANLI', bx + 16, by + 1, '#ffffff', 0.8, 0.5, '#07060f');
 
-    // Bottom Plaque: ÇEVRİM İÇİ
+    // Bottom 3D Rounded Plaque: CEVRIM ICI
     const py = y + ch - 6;
     g.fillStyle = '#07060f'; g.fillRect(x - 1, py - 1, cw + 2, 16);
     g.fillStyle = isSel ? '#c084fc' : '#8b5cf6'; g.fillRect(x, py, cw, 14);
