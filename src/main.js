@@ -6,7 +6,7 @@ import * as G from './game.js';
 import { createWorld, step, render, continueFromCheckpoint, DT } from './game.js';
 import { createCut } from './cutscene.js';
 import { CH_TITLES, CUTS } from './story.js';
-import { drawHUD, drawMenu, drawTitle, titleScale, drawCredits, drawCount, drawResult, drawHelp } from './ui.js';
+import { drawHUD, drawMenu, drawTitle, drawLobby, titleScale, drawCredits, drawCount, drawResult, drawHelp } from './ui.js';
 import { audio, unlock, sfx, music } from './audio.js';
 
 const canvas = document.getElementById('game');
@@ -105,6 +105,15 @@ function uiKey(code) {
   if (S.name === 'help') { if (S.armed <= 0) S.back(); return; }
   if (!S.menu) return;
   const m = S.menu, n = m.items.length;
+  if (m.lobby && S.rects) {
+    const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1], KeyA: [-1, 0], KeyD: [1, 0], KeyW: [0, -1], KeyS: [0, 1] }[code];
+    if (dir) {
+      const cur = S.rects.find((r) => r.i === m.sel), cx = cur.x + cur.w / 2, cy = cur.y + cur.h / 2; let best = null, bd = 1e9;
+      for (const r of S.rects) { if (r === cur) continue; const dx = r.x + r.w / 2 - cx, dy = r.y + r.h / 2 - cy, along = dx * dir[0] + dy * dir[1]; if (along <= 0) continue; const d = along + Math.abs(dir[0] ? dy : dx) * 2; if (d < bd) { bd = d; best = r; } }
+      if (best) { m.sel = best.i; sfx('ui'); }
+      return;
+    }
+  }
   const move = (d) => { let i = m.sel; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!m.items[i].disabled) break; } if (i !== m.sel) { m.sel = i; sfx('ui'); } };
   if (code === 'ArrowDown' || code === 'KeyS') move(1);
   else if (code === 'ArrowUp' || code === 'KeyW') move(-1);
@@ -115,10 +124,11 @@ function uiKey(code) {
 function openTitle() {
   world = null; music('menu');
   if (!demo) { demo = createWorld(CHAPTERS[1], save, 1); demo.enemies.length = 0; demo.hint = null; }
-  setMenu('title', { y: null, items: [
-    { label: save.unlocked > 1 || save.stickers > 0 ? 'DEVAM ET' : 'OYNA', fn: openChapters },
+  setMenu('title', { y: null, lobby: true, items: [
+    { label: 'MACERA', fn: openChapters },
     { label: 'HİKÂYE', fn: openStory },
-    { label: 'KALE KAPMACA (ONLINE)', fn: () => { location.href = 'kale/index.html'; } },
+    { label: 'KALE KAPMACA', fn: () => { location.href = 'kale/index.html'; } },
+    { label: 'ÇOK OYUNCULU', fn: () => { location.href = 'kale/index.html'; } },
     { label: 'DÜKKÂN', fn: () => openShop(openTitle) },
     { label: 'KONTROLLER', fn: () => openHelp(openTitle) },
     { label: 'AYARLAR', fn: () => openSettings(openTitle) },
@@ -275,12 +285,12 @@ function frame(now) {
       if (S.name !== 'result') drawHUD(g, world, VW, VH, t);
       if (count > 0 && (S.name === 'count' || S.name === 'play')) { const n = Math.ceil(count / 0.6) - 1; drawCount(g, n, (count / 0.6) % 1, VW, VH); }
       if (S.name === 'result') drawResult(g, world, VW, VH, 2);
-    } else if (S.name === 'title') drawTitle(g, VW, VH, t);
+    }
   }
   if (S.name === 'help') drawHelp(g, VW, VH, touch.on);
   else if (S.menu) {
-    if (S.name === 'title') S.menu.y = Math.round(VH * 0.14) + titleScale(VW, VH) * 21 + 26;
-    S.rects = drawMenu(g, S.menu, VW, VH, t);
+    if (S.menu.lobby) { S.menu.stickers = save.stickers; S.rects = drawLobby(g, S.menu, VW, VH, t); }
+    else S.rects = drawMenu(g, S.menu, VW, VH, t);
   }
 }
 

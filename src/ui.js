@@ -1,6 +1,7 @@
 // HUD, menus and overlays. Everything is drawn on the game canvas with the pixel font.
 import { text, textW, wrap, clamp } from './gfx.js';
 import { SPR, draw } from './art.js';
+import { sprites } from './heroes.js';
 
 const INK = '#141021', PAPER = '#fff7ed', RED = '#ec3750', GOLD = '#fde68a';
 export const NAMES = { akin: 'AKIN', devin: 'DEVİN', mert: 'MERT', tuna: 'TUNA', gokoz: 'GÖKÖZ', ozgur: 'ÖZGÜR', buglord: 'BUG LORD', goblin: 'DEADLINE GOBLIN', doner: 'DÖNER OVERLORD', spam: 'SPAM MAGE', jury: 'JÜRİ' };
@@ -85,6 +86,82 @@ export function drawTitle(g, VW, VH, t) {
   g.fillStyle = INK; g.fillRect(Math.round(VW / 2 - sw / 2), y + sc * 21 + 2, sw, 14); text(g, sub, VW / 2, y + sc * 21 + 4, GOLD, 1, 0.5);
   text(g, 'CODE JAM TEMASI: BOUNCE BACK', VW / 2, VH - 13, PAPER, 1, 0.5, INK);
 }
+
+// ---- mobile-style lobby; menu items: 0 MACERA 1 HİKÂYE 2 KALE 3 ÇOK OYUNCULU 4 DÜKKÂN 5 KONTROLLER 6 AYARLAR
+function lbox(g, x, y, w, h, fill, top, sel) {
+  const yy = sel ? y - 1 : y;
+  if (sel) { g.fillStyle = GOLD; g.fillRect(x - 3, yy - 3, w + 6, h + 6 + 1); }
+  g.fillStyle = INK; g.fillRect(x - 2, yy - 2, w + 4, h + 4 + 1);
+  g.fillStyle = fill; g.fillRect(x, yy, w, h);
+  g.fillStyle = top; g.fillRect(x, yy, w, 2);
+  return yy;
+}
+function drawCastle(g, x, y, s) {
+  const r = (a, b, w, h, c) => { g.fillStyle = c; g.fillRect(x + a * s, y + b * s, w * s, h * s); };
+  r(1, 5, 14, 10, '#9a93b3'); r(1, 5, 14, 1, '#d8d3ea');
+  r(0, 2, 4, 13, '#b8b2d0'); r(12, 2, 4, 13, '#b8b2d0'); r(0, 1, 1, 2, '#b8b2d0'); r(2, 1, 1, 2, '#b8b2d0'); r(12, 1, 1, 2, '#b8b2d0'); r(14, 1, 1, 2, '#b8b2d0');
+  r(5, 3, 6, 12, '#a8a2c4'); r(5, 2, 1, 1, '#a8a2c4'); r(7, 2, 2, 1, '#a8a2c4'); r(10, 2, 1, 1, '#a8a2c4');
+  r(6, 9, 4, 6, '#141021'); r(7, 7, 2, 2, '#fde68a'); r(1, 7, 2, 2, '#141021'); r(13, 7, 2, 2, '#141021');
+  r(8, -2, 1, 4, '#141021'); r(9, -2, 3, 2, '#ec3750');
+}
+function drawGear(g, x, y, s, col) {
+  const u = Math.max(1, Math.floor(s / 12));
+  g.fillStyle = col;
+  const R = (a, b, w, h) => g.fillRect(x + a * u, y + b * u, w * u, h * u);
+  R(5, 0, 2, 12); R(0, 5, 12, 2); R(1, 1, 2, 2); R(9, 1, 2, 2); R(1, 9, 2, 2); R(9, 9, 2, 2); R(2, 2, 8, 8);
+  g.fillStyle = '#4a3a78'; R(4, 4, 4, 4); g.fillStyle = col; R(5, 5, 2, 2);
+}
+export function drawLobby(g, m, VW, VH, t) {
+  const u = Math.min(VW, VH), rects = [], sel = m.sel;
+  g.fillStyle = '#2e4a6b'; g.fillRect(0, 0, VW, VH);
+  g.globalAlpha = 0.09;
+  const gl = ['</>', '{ }', '^.^'], cw = 40, ch = 22, ox = (t * 6) % cw, oy = (t * 3) % ch;
+  for (let r = -1; r * ch < VH + ch; r++) for (let c = -1; c * cw < VW + cw; c++) text(g, gl[(r * 3 + c + 99) % 3], c * cw + (r & 1) * 20 - ox, r * ch - oy, '#9fc0ea', 1, 0);
+  g.globalAlpha = 1;
+  // logo
+  const sc = VH < 250 ? 2 : 3, ly = VH < 250 ? 5 : Math.round(VH * 0.04);
+  text(g, 'HAVEN', VW / 2, ly + 2, INK, sc, 0.5); text(g, 'HAVEN', VW / 2 - 1, ly, RED, sc, 0.5); text(g, 'HAVEN', VW / 2 - 1, ly - 1, '#ff8c37', sc, 0.5);
+  g.save(); g.beginPath(); g.rect(0, ly + sc * 5, VW, 99); g.clip(); text(g, 'HAVEN', VW / 2 - 1, ly - 1, RED, sc, 0.5); g.restore();
+  text(g, 'ANKARA', VW / 2, ly + sc * 10 + 2, PAPER, sc, 0.5, INK);
+  const logoB = ly + sc * 17 + 2;
+  // tiles
+  const gap = Math.max(4, Math.round(u * 0.02)), ts = clamp(Math.round(u * 0.3), 46, 86), rowW = ts * 3 + gap * 2, tx = Math.round((VW - rowW) / 2), ty = VH - 14 - ts;
+  const band = 11, spr = Math.floor((ts - band - 6) / 1);
+  const defs = [['MACERA', '#f59e0b', '#ffd27a', 'akin'], ['HİKÂYE', '#4ade80', '#bbf7d0', 'ozgur'], ['KALE KAPMACA', '#a855f7', '#d8b4fe', null]];
+  defs.forEach(([lab, col, top, id], k) => {
+    const x = tx + k * (ts + gap), s = sel === k, y = lbox(g, x, ty, ts, ts, col, top, s);
+    g.fillStyle = 'rgba(20,16,33,.25)'; g.fillRect(x, y + ts - band - 6, ts, 6);
+    if (id) { const f = sprites(id, ['idle']).idle; draw64(g, f[Math.floor(t * 5) % f.length], x + (ts - spr) / 2, y + 4, spr); }
+    else { const cs = Math.max(1, Math.floor((ts - band - 12) / 16)); drawCastle(g, x + Math.round((ts - 16 * cs) / 2), y + 8 + cs * 2, cs); }
+    g.fillStyle = INK; g.fillRect(x, y + ts - band, ts, band);
+    text(g, lab, x + ts / 2, y + ts - band + 2, s ? GOLD : PAPER, 1, 0.5);
+    if (k === 2) { const rw = textW('YENİ!') + 6; g.fillStyle = INK; g.fillRect(x - 1, y + 3, rw + 2, 11); g.fillStyle = RED; g.fillRect(x, y + 4, rw, 9); text(g, 'YENİ!', x + rw / 2, y + 5, PAPER, 1, 0.5); }
+    rects.push({ x: x - 2, y: ty - 3, w: ts + 4, h: ts + 6, i: k });
+  });
+  // wide purple button
+  const bh = VH < 250 ? 14 : 18, wy = ty - bh - 8, ww = rowW;
+  { const s = sel === 3, y = lbox(g, tx, wy, ww, bh, '#7c3aed', '#c4b5fd', s); text(g, 'ÇOK OYUNCULU', tx + ww / 2, y + Math.round((bh - 7) / 2) + 1, s ? GOLD : PAPER, 1, 0.5, INK); rects.push({ x: tx - 2, y: wy - 3, w: ww + 4, h: bh + 6, i: 3 }); }
+  // left stack
+  const lw = VW < 300 ? 62 : 84, lbh = VH < 250 ? 13 : 17, lx = 6;
+  let ly2 = logoB + 4;
+  [[4, 'DÜKKÂN', '#0ea5e9', '#7dd3fc'], [5, 'KONTROLLER', '#475569', '#94a3b8']].forEach(([i, lab, c, tp]) => {
+    if (ly2 + lbh > wy - 2) return;
+    const s = sel === i, y = lbox(g, lx, ly2, lw, lbh, c, tp, s); text(g, lab, lx + lw / 2, y + Math.round((lbh - 7) / 2) + 1, s ? GOLD : PAPER, 1, 0.5, INK);
+    rects.push({ x: lx - 2, y: ly2 - 3, w: lw + 4, h: lbh + 6, i }); ly2 += lbh + 6;
+  });
+  // sticker counter
+  const num = String(m.stickers || 0).padStart(4, '0'), bw = 12 + 6 + num.length * 6 + 8;
+  g.fillStyle = INK; g.fillRect(VW - bw - 6, 3, bw + 4, 17); g.fillStyle = '#1e1b3a'; g.fillRect(VW - bw - 4, 5, bw, 13);
+  draw(g, SPR.sticker, Math.floor(t * 6) % 4, VW - bw + 2, 15);
+  text(g, num, VW - 8, 8, GOLD, 1, 1);
+  // gear
+  const gs = clamp(Math.round(u * 0.09), 20, 30), gx = VW - gs - 6, gy = VH - gs - 4, gsel = sel === 6, yy = lbox(g, gx, gy, gs, gs, '#6d28d9', '#c4b5fd', gsel);
+  drawGear(g, gx + Math.round((gs - Math.floor(gs * 0.6 / 12) * 12) / 2) + 0, yy + Math.round((gs - Math.floor(gs * 0.6 / 12) * 12) / 2), Math.floor(gs * 0.6), gsel ? GOLD : PAPER);
+  rects.push({ x: gx - 2, y: gy - 3, w: gs + 4, h: gs + 6, i: 6 });
+  text(g, 'CODE JAM TEMASI: BOUNCE BACK', VW / 2, VH - 9, '#a9bdd8', 1, 0.5, INK);
+  return rects;
+}
+function draw64(g, c, x, y, s) { const d = g.imageSmoothingEnabled; g.imageSmoothingEnabled = false; g.drawImage(c, 0, 0, c.width, c.height, Math.round(x), Math.round(y), s, s); g.imageSmoothingEnabled = d; }
 const CREDITS = [['HAVEN ANKARA', 3, GOLD], ['ÇAY, DÖNER VE CODE JAM', 1, PAPER], [], ['TEMA', 1, '#a5f3fc'], ['BOUNCE BACK', 2, PAPER], [], ['EKİP', 1, '#a5f3fc'],
   ['AKIN', 2, PAPER], ['MERT', 2, PAPER], ['TUNA', 2, PAPER], ['GÖKÖZ', 2, PAPER], ['ÖZGÜR', 2, PAPER], ['DEVİN', 2, PAPER], [], ['HACK CLUB', 1, '#a5f3fc'], ['HAVEN ANKARA', 2, GOLD], [], ['OYNADIĞIN İÇİN TEŞEKKÜRLER', 1, PAPER], ['DÜŞERSEN KALK.', 2, RED]];
 // returns true once the last line has settled, so the caller can show the exit hint
@@ -120,7 +197,7 @@ export function drawHelp(g, VW, VH, touch) {
   const step = VH < 240 ? 11 : 12, y0 = 36;
   rows.forEach(([a, b], i) => { text(g, a, VW / 2 - 12, y0 + i * step, PAPER, 1, 1, INK); text(g, b, VW / 2 + 4, y0 + i * step, '#a5f3fc', 1, 0, INK); });
   // the bounce-back tip sits in its own box so it is not lost in the list
-  const lines = wrap(touch ? 'DARBE YEDİN, YERE DEĞMEDEN ▲ BAS!' : 'DARBE YEDİN, YERE DEĞMEDEN ZIPLA!', Math.min(260, VW - 40));
+  const lines = wrap(touch ? 'DARBE YİYİNCE YERE DÜŞERKEN ▲ BAS: GERİ SEK!' : 'DARBE YİYİNCE YERE DÜŞERKEN ZIPLA: GERİ SEK!', Math.min(260, VW - 40));
   const bw = Math.max(...lines.map((l) => textW(l))) + 16, bh = 20 + lines.length * 11, bx = Math.round((VW - bw) / 2), by = Math.min(y0 + rows.length * step + 8, VH - bh - 4);
   g.fillStyle = INK; g.fillRect(bx - 1, by - 1, bw + 2, bh + 2); g.fillStyle = '#7cf0ff'; g.fillRect(bx, by, bw, 2); g.fillStyle = '#1e1b3a'; g.fillRect(bx, by + 2, bw, bh - 2);
   text(g, 'GERİ SEK', VW / 2, by + 6, '#7cf0ff', 1, 0.5);
