@@ -173,7 +173,7 @@ const G = {
   '▼': '.....|#####|.###.|.###.|..#..|..#..|.....', '★': '..#..|..#..|#####|.###.|.###.|##.##|#...#',
   '●': '.###.|#####|#####|#####|#####|#####|.###.', '◆': '..#..|.###.|#####|#####|#####|.###.|..#..', '»': '#.#..|.#.#.|..#.#|..#.#|..#.#|.#.#.|#.#..',
 };
-const ACC = { 'Ö': ['O', '.#.#.'], 'Ü': ['U', '.#.#.'], 'İ': ['I', '.#.'], 'Ğ': ['G', '.###.'], 'Ç': ['C', null, '..#..'], 'Ş': ['S', null, '..#..'], 'Â': ['A', '..#..'] };
+const ACC = { 'Ö': ['O', '.#.#.'], 'Ü': ['U', '.#.#.'], 'İ': ['I', '.#.'], 'Ğ': ['G', '.###.'], 'Ç': ['C', null, '..#..'], 'Ş': ['S', null, '..#..'], 'Â': ['A', '..#..|.#.#.'] };
 const glyphs = new Map(); // char -> {w, px:[[x,y]...]}
 function glyph(ch) {
   let g = glyphs.get(ch);
@@ -189,14 +189,13 @@ function glyph(ch) {
   else {
     const px = [];
     rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === '#') px.push([x, y + 2]); });
-    if (top) for (let x = 0; x < top.length; x++) if (top[x] === '#') px.push([x, 0]);
+    if (top) top.split('|').forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === '#') px.push([x, y]); });
     if (bot) for (let x = 0; x < bot.length; x++) if (bot[x] === '#') px.push([x, 9]);
     g = { w: rows[0].length, px };
   }
   glyphs.set(ch, g);
   return g;
 }
-export const up = (s) => String(s).toLocaleUpperCase('tr');
 export function textW(str, scale = 1) {
   let w = 0;
   for (const ch of str) w += glyph(ch).w + 1;

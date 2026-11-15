@@ -117,7 +117,7 @@ function openTitle() {
   if (!demo) { demo = createWorld(CHAPTERS[1], save, 1); demo.enemies.length = 0; demo.hint = null; }
   setMenu('title', { y: null, items: [
     { label: save.unlocked > 1 || save.stickers > 0 ? 'DEVAM ET' : 'OYNA', fn: openChapters },
-    { label: 'HİKAYE', fn: openStory },
+    { label: 'HİKÂYE', fn: openStory },
     { label: 'DÜKKÂN', fn: () => openShop(openTitle) },
     { label: 'KONTROLLER', fn: () => openHelp(openTitle) },
     { label: 'AYARLAR', fn: () => openSettings(openTitle) },
@@ -126,7 +126,7 @@ function openTitle() {
 function openStory() {
   const items = CHAPTERS.map((mk, i) => ({ label: (i + 1) + '. ' + (CH_TITLES[i] || 'BÖLÜM ' + (i + 1)), value: i < save.unlocked ? 'İZLE' : 'KİLİTLİ', disabled: i >= save.unlocked, fn: () => openStoryChapter(i) }));
   items.push({ label: 'GERİ', fn: openTitle });
-  setMenu('story', { title: 'HİKAYE', note: 'AÇTIĞIN BÖLÜMLERİN SAHNELERİNİ TEKRAR İZLE', wide: true, dim: true, items, back: openTitle });
+  setMenu('story', { title: 'HİKÂYE', note: 'AÇTIĞIN BÖLÜMLERİN SAHNELERİNİ TEKRAR İZLE', wide: true, dim: true, items, back: openTitle });
 }
 function openStoryChapter(i) {
   const items = (CUTS[i] || []).map(([id, label]) => ({ label, value: 'İZLE', fn: () => replay(i, id) }));
@@ -148,12 +148,12 @@ function openChapters() {
 const UPG = [['power', 'GÜÇ', 'VURUŞ HASARI +%15'], ['hp', 'CAN', 'AZAMİ CAN +20'], ['energy', 'ENERJİ', 'SHIP IT DAHA HIZLI DOLAR']];
 const PRICE = [30, 70, 130];
 function openShop(back, keep) {
-  const items = UPG.map(([k, name]) => {
+  const items = UPG.map(([k, name, desc]) => {
     const lv = save.upg[k], max = lv >= 3;
-    return { label: name + ' ' + '★'.repeat(lv) + (max ? '' : ''), value: max ? 'TAM' : PRICE[lv] + ' STICKER', disabled: max || save.stickers < PRICE[lv], fn: () => { save.stickers -= PRICE[lv]; save.upg[k]++; persist(); sfx('power'); openShop(back, k); } };
+    return { label: name + ' ' + '★'.repeat(lv), desc, value: max ? 'MAKS' : PRICE[lv] + ' STICKER', disabled: max, poor: !max && save.stickers < PRICE[lv], fn: () => { if (!max && save.stickers < PRICE[lv]) return sfx('lose'); save.stickers -= PRICE[lv]; save.upg[k]++; persist(); sfx('power'); openShop(back, k); } };
   });
   items.push({ label: 'GERİ', fn: back });
-  setMenu('shop', { title: 'DÜKKÂN', note: 'STICKER: ' + save.stickers + '   GÜÇ: HASAR  CAN: +20  ENERJİ: HIZLI DOLUM', wide: true, dim: true, items, back });
+  setMenu('shop', { title: 'DÜKKÂN', note: 'STICKER: ' + save.stickers, wide: true, dim: true, items, back });
   if (keep) { const i = UPG.findIndex((u) => u[0] === keep); if (!items[i].disabled) S.menu.sel = i; }
   if (S.menu.sel < 0) S.menu.sel = items.length - 1;
 }
@@ -240,7 +240,7 @@ function tick() {
 }
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = Math.min(0.1, (now - last) / 1000);
+  const dt = clamp((now - last) / 1000, 0, 0.1); // rAF stamps can precede performance.now() on the first frame
   last = now;
   if (document.hidden) return;
   S.t += dt; if (S.armed > 0) S.armed -= dt;
@@ -267,7 +267,7 @@ function frame(now) {
   const w = world || demo;
   if (!world) { demo.t += dt; demo.cam.x = (Math.sin(demo.t * 0.07) * 0.5 + 0.5) * Math.max(0, 1500 - VW) + 60; demo.player.x = -200; demo.devin.x = -200; demo.cam.y = Math.max(0, 288 - VH); }
   if (S.name === 'cut' && cut) cut.render(g, VW, VH);
-  else if (S.name === 'credits') { if (drawCredits(g, creditsT, VW, VH) && Math.floor(t * 2) % 2) text(g, touch.on ? 'DOKUN: ANA MENÜ' : 'ENTER: ANA MENÜ', VW / 2, VH - 16, GOLD, 1, 0.5, '#141021'); }
+  else if (S.name === 'credits') { if (drawCredits(g, creditsT, VW, VH) && Math.floor(t * 2) % 2) text(g, touch.on ? 'DOKUN: ANA MENÜ' : 'ENTER: ANA MENÜ', VW / 2, VH - 16, '#fde68a', 1, 0.5, '#141021'); }
   else {
     render(w, g, VW, VH);
     if (world) {
@@ -287,4 +287,4 @@ buildArt();
 resize();
 openTitle();
 requestAnimationFrame(frame);
-if (location.hash === '#debug') window.__haven = { S, get world() { return world; }, inp, get save() { return save; }, startChapter, tick, press, keys, skip: () => cut && cut.skip(), cutAdvance: () => cut && cut.advance(), runCut, startCredits, go: () => { count = 0; S.name = 'play'; }, onClear, activate, uiKey };
+if (location.hash === '#debug') window.__haven = { S, get world() { return world; }, get cut() { return cut; }, inp, get save() { return save; }, startChapter, tick, press, keys, skip: () => cut && cut.skip(), cutAdvance: () => cut && cut.advance(), runCut, startCredits, go: () => { count = 0; S.name = 'play'; }, onClear, activate, uiKey };

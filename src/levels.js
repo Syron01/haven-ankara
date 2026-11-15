@@ -23,7 +23,7 @@ function chapter1() {
   L.zones = [{ x0: 0, x1: 75, set: 'in' }, { x0: 76, x1: 221, set: 'gr' }];
   L.ground(0, 221);
   // --- event hall
-  L.npcs.push({ id: 'mert', x: 7 }, { id: 'tuna', x: 10 }, { id: 'gokoz', x: 13 }, { id: 'ozgur', x: 16, story: true });
+  L.npcs.push({ id: 'mert', x: 10 }, { id: 'tuna', x: 13 }, { id: 'gokoz', x: 16 }, { id: 'ozgur', x: 19, story: true });
   L.p('banner', 6, { y: 5 }); L.p('reg', 19); L.p('poster', 26, { y: 6, v: 0 }); L.p('desk', 30); L.p('plant', 34); L.p('poster', 37, { y: 6, v: 1 });
   L.p('urn', 41); L.p('desk', 45); L.p('bean', 50); L.p('poster', 53, { y: 6, v: 2 }); L.p('pizza', 56); L.p('banner', 44, { y: 4 }); L.p('plant', 59);
   L.hints.push({ x: 4, t: 'YÜRÜ, ZIPLA. HAVADAYKEN BİR KEZ DAHA ZIPLAYABİLİRSİN!' }, { x: 23, t: 'J J J: ÜÇLÜ KOMBO! MERCH KUTULARINI DA KIR.' });
@@ -42,7 +42,7 @@ function chapter1() {
   L.spikes(111, 114); L.plat(110, 115, 12); L.coins(111, 4, 11);
   L.hints.push({ x: 116, t: 'AŞAĞI + K HAVAYA KALDIRIR. HAVADA J İLE DEVAM ET!' });
   L.arenas.push({ x0: 118, x1: 148, waves: [['bot', 'imp', 'imp'], ['knight', 'slime', 'bot']] });
-  L.hints.push({ x: 120, t: 'ŞÖVALYENİN KALKANI SAĞLAM: KOMBOYU BİTİR YA DA ARKASINA GEÇ.' }, { x: 138, t: 'DARBE YEDİN Mİ? YERE DÜŞERKEN ZIPLA: BOUNCE BACK!' });
+  L.hints.push({ x: 120, t: 'ŞÖVALYENİN KALKANI SAĞLAM: KOMBOYU BİTİR YA DA ARKASINA GEÇ.' }, { x: 138, t: 'DARBE YEDİN Mİ? YERE DEĞMEDEN ZIPLA: GERİ SEK!' });
   L.pit(150, 153); L.plat(151, 152, 13);
   L.plat(156, 158, 12); L.plat(160, 162, 9); L.plat(156, 158, 6); L.e('rozet', 157, { row: 5 }); L.coins(160, 3, 8); L.e('doneri', 161, { row: 8 });
   L.e('crate', 164, { drop: 'sapan' }); L.e('knight', 169); L.e('bot', 172); L.coins(166, 5);
@@ -92,7 +92,7 @@ function chapter3() {
   L.e('pad', 13); L.plat(16, 21, 6); L.coins(16, 6, 5); L.e('rozet', 19, { row: 5 });
   L.e('crate', 24, { drop: 'stickers' }); L.e('troll', 27); L.e('imp', 31);
   L.e('flag', 34, { npc: 'tuna', gift: 'klavye', say: 'KAFEDE KOD YAZARKEN KULLANDIĞIM KLAVYE. AL, SERT VURUR!' });
-  L.hints.push({ x: 36, t: 'YORUM TROLLERİ UZAKTAN KAHVE FIRLATIR. YAKLAŞ YA DA DASH AT!' });
+  L.hints.push({ x: 36, t: 'YORUM TROLLERİ UZAKTAN KAHVE FIRLATIR. YAKLAŞ YA DA ATIL!' });
   L.arenas.push({ x0: 38, x1: 68, waves: [['troll', 'imp'], ['troll', 'bot', 'slime'], ['knight', 'troll', 'imp']] });
   // --- bookstore and record shop
   L.p('bookstall', 70); L.p('recstall', 82); L.p('bin', 92); L.p('bookstall', 96);
@@ -160,7 +160,7 @@ function chapter5() {
   L.e('pad', 98); L.plat(103, 108, 10); L.e('pad', 118);
   L.e('flag', 127, { npc: 'mert', gift: 'doneri', say: 'BUG LORD SAHNEDE. HEPİMİZ ARKANDAYIZ!' });
   L.e('crate', 129, { drop: 'doneri' });
-  L.hints.push({ x: 130, t: 'BUG LORD KRİZE GİRERSE... KALK VE ZIPLA! YERE DÜŞERKEN ZIPLAMAYI UNUTMA.' });
+  L.hints.push({ x: 130, t: 'BUG LORD SENİ YERE SERERSE BİLE PES ETME: YERE DEĞMEDEN ZIPLA, GERİ SEK!' });
   L.p('bigscreen', 140, { y: 3 }); L.p('speaker', 134); L.p('speaker', 162);
   L.npcs.push({ id: 'mert', x: 134 }, { id: 'tuna', x: 136 }, { id: 'gokoz', x: 138 }, { id: 'ozgur', x: 161 });
   L.e('pad', 142); L.plat(145, 152, 10); L.e('pad', 156);

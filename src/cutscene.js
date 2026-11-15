@@ -19,15 +19,22 @@ export function createCut(w, id, VW, VH) {
   const script = STORY[id] || [];
   w.VW = VW; w.VH = VH;
   const p = w.player, arenas = w.lv.arenas || [], a = arenas.find((x) => x.cut === id) || (id === 'bugCrash' && arenas.find((x) => x.boss)), boss = w.enemies.find((e) => e.boss);
-  const A = a ? a.x0 * TILE : id.startsWith('intro') ? w.lv.start * TILE : p.x;
-  const anc = { P: a && !boss ? A + 76 : p.x, B: boss ? boss.x : a ? Math.max(a.x1 * TILE, A + VW) - 70 : A + 200 };
+  let A = a ? a.x0 * TILE : id.startsWith('intro') ? w.lv.start * TILE : p.x, ctr = 0;
+  const intro = !a && id.startsWith('intro') && !w.camInit && !script.some((s) => s.some((v) => typeof v === 'string' && v[0] === '@'));
+  if (intro) { // the camera is pinned at the level start, so slide the whole scene to the middle of the screen instead
+    const fin = {};
+    for (const s of script) { const v = s[0] === 'actor' ? s[3] : s[0] === 'walk' ? s[2] : undefined; if (v !== undefined) fin[s[1]] = typeof v === 'number' ? v : /^P[+-]?\d*$/.test(v) ? +v.slice(1) || 0 : fin[s[1]]; }
+    const xs = Object.values(fin).filter((v) => v !== undefined);
+    if (xs.length) { ctr = (Math.min(...xs) + Math.max(...xs)) / 2; A = Math.max(A, Math.round(VW / 2 - ctr)); }
+  }
+  const anc = { P: intro ? A : a && !boss ? A + 76 : p.x, B: boss ? boss.x : a ? Math.max(a.x1 * TILE, A + VW) - 70 : A + 200 };
   // the world is paused: real actors are stashed off-stage and drawn as cutscene actors instead
   const st = { px: p.x, dx: w.devin.x, npcs: w.npcs, enemies: w.enemies, shots: w.shots, go: w.go };
   const npcX = {}; for (const n of st.npcs) npcX[n.id] = n.x;
   p.x = w.devin.x = -999; w.npcs = []; w.enemies = []; w.shots = []; w.hint = null; w.go = 0;
-  const ac = {}, tws = [], view = { x: w.camInit ? w.cam.x + VW / 2 : anc.P, z: 1, fade: 0, f: null };
+  const ac = {}, tws = [], view = { x: w.camInit ? w.cam.x + VW / 2 : anc.P + ctr, z: 1, fade: 0, f: null };
   w.camInit = true;
-  const bars = { cur: 0, tgt: 0 }, c = { done: false, holdT: 0, touch: false, skipRect: { x: VW - 46, y: 3, w: 43, h: 14 } };
+  const bars = { cur: 0, tgt: 0 }, c = { id, done: false, holdT: 0, touch: false, skipRect: { x: VW - 46, y: 3, w: 43, h: 14 } };
   let i = 0, blk = null, bub = null, card = null, bossC = null, pop = null, screen = null, shk = 0, fl = 0, freeze = false, cdt = 0;
 
   const rx = (v) => {

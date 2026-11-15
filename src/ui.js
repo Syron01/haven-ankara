@@ -1,5 +1,5 @@
 // HUD, menus and overlays. Everything is drawn on the game canvas with the pixel font.
-import { text, textW, wrap, cv, clamp } from './gfx.js';
+import { text, textW, wrap, clamp } from './gfx.js';
 import { SPR, draw } from './art.js';
 
 const INK = '#141021', PAPER = '#fff7ed', RED = '#ec3750', GOLD = '#fde68a';
@@ -50,7 +50,7 @@ export function drawHUD(g, w, VW, VH, t) {
 // generic vertical menu; returns button rects for pointer input
 export function drawMenu(g, m, VW, VH, t) {
   const rows = m.items.length, bw = Math.min(VW - 40, m.wide ? 250 : 170), bh = 17, gap = 5;
-  const totalH = rows * (bh + gap) + (m.title ? 26 : 0) + (m.note ? 14 : 0);
+  const totalH = rows * (bh + gap) + (m.title ? 26 : 0) + (m.note ? 14 : 0) + (m.items.some((it) => it.desc) ? 12 : 0);
   let y = Math.round(m.y !== undefined ? m.y : (VH - totalH) / 2);
   const x = Math.round((VW - bw) / 2), rects = [];
   if (m.dim) { g.globalAlpha = 0.72; g.fillStyle = '#0b0916'; g.fillRect(0, 0, VW, VH); g.globalAlpha = 1; }
@@ -61,12 +61,14 @@ export function drawMenu(g, m, VW, VH, t) {
     g.fillStyle = INK; g.fillRect(x - 2, by - 2, bw + 4, bh + 4 + 2);
     g.fillStyle = it.disabled ? '#57506e' : sel ? RED : PAPER; g.fillRect(x, by + (sel ? 1 : 0), bw, bh);
     if (!it.disabled) { g.fillStyle = sel ? '#ff8c37' : '#ffffff'; g.fillRect(x, by + (sel ? 1 : 0), bw, 2); }
-    const col = it.disabled ? '#9a93b3' : sel ? PAPER : INK;
+    const col = it.disabled ? '#9a93b3' : sel ? PAPER : it.poor ? '#8a6f7a' : INK;
     text(g, it.label, it.value !== undefined ? x + 8 : VW / 2, by + 4 + (sel ? 1 : 0), col, 1, it.value !== undefined ? 0 : 0.5);
     if (it.value !== undefined) text(g, it.value, x + bw - 8, by + 4 + (sel ? 1 : 0), col, 1, 1);
     if (sel && Math.floor(t * 4) % 2) text(g, '>', x - 12, by + 4, GOLD, 1, 0, INK);
     rects.push({ x: x - 2, y: by - 2, w: bw + 4, h: bh + 6, i });
   });
+  const d = m.items[m.sel] && m.items[m.sel].desc;
+  if (d) text(g, d, VW / 2, y + rows * (bh + gap) + 2, '#a5f3fc', 1, 0.5, INK);
   return rects;
 }
 
@@ -115,5 +117,12 @@ export function drawHelp(g, VW, VH, touch) {
   const rows = touch
     ? [['< >', 'YÜRÜ'], ['▲', 'ZIPLA (İKİ KEZ)'], ['●', 'YUMRUK: ÜÇLÜ KOMBO'], ['◆', 'TEKME / HAVADA ÇAKIL'], ['▼ + ◆', 'HAVAYA KALDIR'], ['»', 'ATIL'], ['T', 'SİLAHI FIRLAT'], ['★', 'SHIP IT (ENERJİ DOLUNCA)']]
     : [['A D / OKLAR', 'YÜRÜ'], ['BOŞLUK / W', 'ZIPLA (İKİ KEZ)'], ['J', 'YUMRUK: ÜÇLÜ KOMBO'], ['K', 'TEKME / HAVADA ÇAKIL'], ['S + K', 'HAVAYA KALDIR'], ['SHIFT', 'ATIL'], ['L', 'SİLAHI FIRLAT'], ['Q', 'SHIP IT (ENERJİ DOLUNCA)'], ['S + BOŞLUK', 'PLATFORMDAN İN'], ['ESC', 'DURAKLAT']];
-  rows.forEach(([a, b], i) => { text(g, a, VW / 2 - 12, 38 + i * 13, PAPER, 1, 1, INK); text(g, b, VW / 2 + 4, 38 + i * 13, '#a5f3fc', 1, 0, INK); });
+  const step = VH < 240 ? 11 : 12, y0 = 36;
+  rows.forEach(([a, b], i) => { text(g, a, VW / 2 - 12, y0 + i * step, PAPER, 1, 1, INK); text(g, b, VW / 2 + 4, y0 + i * step, '#a5f3fc', 1, 0, INK); });
+  // the bounce-back tip sits in its own box so it is not lost in the list
+  const lines = wrap(touch ? 'DARBE YEDİN, YERE DEĞMEDEN ▲ BAS!' : 'DARBE YEDİN, YERE DEĞMEDEN ZIPLA!', Math.min(260, VW - 40));
+  const bw = Math.max(...lines.map((l) => textW(l))) + 16, bh = 20 + lines.length * 11, bx = Math.round((VW - bw) / 2), by = Math.min(y0 + rows.length * step + 8, VH - bh - 4);
+  g.fillStyle = INK; g.fillRect(bx - 1, by - 1, bw + 2, bh + 2); g.fillStyle = '#7cf0ff'; g.fillRect(bx, by, bw, 2); g.fillStyle = '#1e1b3a'; g.fillRect(bx, by + 2, bw, bh - 2);
+  text(g, 'GERİ SEK', VW / 2, by + 6, '#7cf0ff', 1, 0.5);
+  lines.forEach((l, k) => text(g, l, VW / 2, by + 19 + k * 11, PAPER, 1, 0.5));
 }

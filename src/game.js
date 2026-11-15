@@ -579,7 +579,7 @@ function stepPlayer(w, inp) {
   if (p.kb && p.state !== 'ko' && p.state !== 'win' && inp.jump > 0 && (p.grounded || (p.vy > 0 && groundDist(w, p) <= p.vy * 0.25 + 4))) {
     inp.jump = 0; p.kb = false; p.vy = -310; p.vx *= 0.3; p.grounded = false; p.jumps = 1; p.cut = true; p.inv = Math.max(p.inv, 0.5); p.en = Math.min(1, p.en + 0.2);
     setP(p, 'jump'); w.fx.push({ ring: 1, x: p.x, y: p.y - 14, vx: 0, vy: 0, life: 0.42, max: 0.42, col: '#7cf0ff' }); spark(w, p.x, p.y - 8, '#7cf0ff', 10, 130, 0, 0.35);
-    num(w, p.x, p.y - 44, 'BOUNCE!', '#7cf0ff'); sfx('boing'); w.hitstop = 0.04; w.stats.bounces = (w.stats.bounces || 0) + 1;
+    num(w, p.x, p.y - 44, 'GERİ SEK!', '#7cf0ff'); sfx('boing'); w.hitstop = 0.04; w.stats.bounces = (w.stats.bounces || 0) + 1;
   }
   let grav = true;
   if (p.state === 'ko') {

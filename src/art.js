@@ -1,5 +1,5 @@
 // Every non-humanoid sprite, item, prop, tile and background layer. All art is generated in code, pixel by pixel.
-import { Buf, OUT, cv, text, textW } from './gfx.js';
+import { Buf, OUT, cv, text } from './gfx.js';
 
 export const SPR = {};
 export const TILE = 16;
