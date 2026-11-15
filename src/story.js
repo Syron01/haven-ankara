@@ -32,7 +32,7 @@ export const STORY = {
     ['say', 'tuna', 'EKRAN MAVİ OLDU. BU İYİ BİR ŞEY DEĞİL.'],
     ['say', 'gokoz', 'DÖNER ANİMASYONU DA DONDU. ÇOK ÜZGÜNÜM.'],
     ['sfx', 'warn'], ['shake', 6], ['actor', 'buglord', 'buglord', 380, 'l'], ['flash'], ['jump', 'tuna', '&'], ['sfx', 'boom'],
-    ['say', 'buglord', 'BOUNCE BACK MI? ÖNCE BİR ÇÖKELİM BAKALIM!'],
+    ['say', 'buglord', 'BOUNCE BACK Mİ? ÖNCE BİR ÇÖKELİM BAKALIM!'],
     ['say', 'akin', 'KİM BU? ÇOK PARLAK BİR YEŞİL.'],
     ['say', 'buglord', 'BEN BUG LORD! SHOWCASE EKRANI ARTIK BENİM!'],
     ['say', 'buglord', 'ŞU ORGANİZATÖRÜ DE ALIYORUM. PRENSESSİZ HİKÂYE OLMAZ!'],
@@ -191,7 +191,7 @@ export const STORY = {
   bugIntro: [
     ['bars', 1], ['cam', 'M', 0.6],
     ['actor', 'akin', 'akin', 'P', 'r'], ['actor', 'devin', 'devin', 'P-45', 'r'], ['actor', 'buglord', 'buglord', 'B', 'l'],
-    ['say', 'buglord', 'GERİ DÖNMEYE CESARET ETTİNİZ MI? BU SAHNE BENİM!'],
+    ['say', 'buglord', 'GERİ DÖNMEYE CESARET ETTİNİZ Mİ? BU SAHNE BENİM!'],
     ['say', 'akin', "DEMOMUZ ÇÖKTÜ AMA ÖZGÜR'Ü ALMADAN GİTMİYORUM."],
     ['boss', 'buglord', 'BUG LORD', 'HER DEMONUN KORKULU RÜYASI'],
     ['say', 'buglord', 'HER ÇÖKÜŞÜN ARKASINDA BEN VARIM!'],
